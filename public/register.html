@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register – CoWork</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .register-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .register-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow);
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .register-logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 24px;
+      display: inline-block;
+      text-decoration: none;
+    }
+    .register-logo:hover { text-decoration: none; opacity: 0.85; }
+    .register-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-bottom: 4px;
+      letter-spacing: -0.4px;
+    }
+    .register-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+    .register-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    @media (max-width: 480px) {
+      .register-card { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="register-page">
+  <div class="register-card">
+    <a href="index.html" class="register-logo">CoWork</a>
+    <h1 class="register-title">Create Account</h1>
+    <p class="register-subtitle">Join CoWork to start booking spaces</p>
+
+    <div id="registerAlert"></div>
+
+    <form id="registerForm" class="register-form">
+      <div class="form-group">
+        <label class="form-label" for="regName">Full Name</label>
+        <input type="text" id="regName" class="input" placeholder="Your full name" required autocomplete="name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="regTel">Telephone</label>
+        <input type="tel" id="regTel" class="input" placeholder="e.g. 081-234-5678" autocomplete="tel" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="regEmail">Email</label>
+        <input type="email" id="regEmail" class="input" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="regPassword">Password</label>
+        <input type="password" id="regPassword" class="input" placeholder="At least 6 characters" required autocomplete="new-password" />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="registerBtn" style="margin-top:4px;">
+        Create Account
+      </button>
+    </form>
+
+    <hr class="divider" style="margin-top:24px;margin-bottom:16px;" />
+    <p style="text-align:center;font-size:0.875rem;color:var(--text-muted);">
+      Already have an account? <a href="index.html">Sign in</a>
+    </p>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:5000/api/v1';
+
+  const api = (path, opts = {}) => fetch(API + path, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(localStorage.getItem('token') ? { Authorization: 'Bearer ' + localStorage.getItem('token') } : {})
+    },
+    ...opts
+  });
+
+  // If already logged in, redirect
+  if (localStorage.getItem('token')) {
+    window.location.href = 'index.html';
+  }
+
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const alertEl = document.getElementById('registerAlert');
+    const btn = document.getElementById('registerBtn');
+    alertEl.innerHTML = '';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Creating account...';
+
+    const name = document.getElementById('regName').value.trim();
+    const tel = document.getElementById('regTel').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+
+    if (password.length < 6) {
+      alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:8px;">Password must be at least 6 characters.</div>';
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+      return;
+    }
+
+    try {
+      const body = { name, email, password };
+      if (tel) body.tel = tel;
+
+      const res = await api('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Registration failed');
+
+      localStorage.setItem('token', data.token);
+      alertEl.innerHTML = '<div class="alert alert-success" style="margin-bottom:8px;">Account created! Redirecting...</div>';
+      setTimeout(() => { window.location.href = 'index.html'; }, 800);
+    } catch (err) {
+      alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:8px;">${err.message}</div>`;
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    }
+  });
+</script>
+</body>
+</html>

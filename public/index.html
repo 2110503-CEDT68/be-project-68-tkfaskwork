@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CoWork – Find Your Workspace</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-logo">CoWork</a>
+    <div class="navbar-links">
+      <a href="index.html" class="active">Browse</a>
+      <a href="bookings.html">My Bookings</a>
+      <a href="recommend.html">&#10024; AI Suggest</a>
+    </div>
+    <div class="navbar-auth" id="navAuth">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <h1 class="hero-title">Find Your Perfect Workspace</h1>
+    <p class="hero-subtitle">Browse and book co-working spaces near you</p>
+    <div class="hero-search">
+      <input
+        type="text"
+        id="searchInput"
+        class="input"
+        placeholder="Search by name or address..."
+        autocomplete="off"
+      />
+    </div>
+  </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<main class="page-container">
+  <div id="spacesGrid" class="spaces-grid">
+    <!-- skeleton placeholders -->
+    <div class="space-card" style="min-height:180px;">
+      <div class="skeleton" style="height:20px;width:60%;"></div>
+      <div class="skeleton" style="height:14px;width:90%;"></div>
+      <div class="skeleton" style="height:14px;width:70%;"></div>
+      <div class="skeleton" style="height:32px;width:100%;margin-top:auto;"></div>
+    </div>
+    <div class="space-card" style="min-height:180px;">
+      <div class="skeleton" style="height:20px;width:55%;"></div>
+      <div class="skeleton" style="height:14px;width:85%;"></div>
+      <div class="skeleton" style="height:14px;width:65%;"></div>
+      <div class="skeleton" style="height:32px;width:100%;margin-top:auto;"></div>
+    </div>
+    <div class="space-card" style="min-height:180px;">
+      <div class="skeleton" style="height:20px;width:70%;"></div>
+      <div class="skeleton" style="height:14px;width:80%;"></div>
+      <div class="skeleton" style="height:14px;width:60%;"></div>
+      <div class="skeleton" style="height:32px;width:100%;margin-top:auto;"></div>
+    </div>
+  </div>
+</main>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+    <div class="modal-header">
+      <h2 class="modal-title" id="loginModalTitle">Sign In</h2>
+      <button class="modal-close" id="modalCloseBtn" aria-label="Close">&times;</button>
+    </div>
+    <div id="loginError"></div>
+    <form id="loginForm" style="display:flex;flex-direction:column;gap:16px;">
+      <div class="form-group">
+        <label class="form-label" for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" class="input" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" class="input" placeholder="••••••••" required autocomplete="current-password" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">Sign In</button>
+    </form>
+    <p style="text-align:center;font-size:0.875rem;color:var(--text-muted);">
+      Don't have an account?
+      <a href="register.html">Create one</a>
+    </p>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:5000/api/v1';
+
+  const api = (path, opts = {}) => fetch(API + path, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(localStorage.getItem('token') ? { Authorization: 'Bearer ' + localStorage.getItem('token') } : {})
+    },
+    ...opts
+  });
+
+  function isLoggedIn() {
+    return !!localStorage.getItem('token');
+  }
+
+  function getUserName() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return null;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.name || payload.email || 'User';
+    } catch {
+      return 'User';
+    }
+  }
+
+  // Pending space id when login required
+  let pendingSpaceId = null;
+
+  // Render navbar auth section
+  function renderNav() {
+    const navAuth = document.getElementById('navAuth');
+    if (isLoggedIn()) {
+      navAuth.innerHTML = `
+        <span class="user-greeting">Hi, ${getUserName()}</span>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button>
+      `;
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        window.location.reload();
+      });
+    } else {
+      navAuth.innerHTML = `
+        <a href="register.html" class="btn btn-ghost btn-sm">Register</a>
+        <button class="btn btn-primary btn-sm" id="navLoginBtn">Login</button>
+      `;
+      document.getElementById('navLoginBtn').addEventListener('click', () => {
+        pendingSpaceId = null;
+        openModal();
+      });
+    }
+  }
+
+  // Modal
+  const loginModal = document.getElementById('loginModal');
+
+  function openModal() {
+    loginModal.classList.add('open');
+    document.getElementById('loginEmail').focus();
+  }
+
+  function closeModal() {
+    loginModal.classList.remove('open');
+    document.getElementById('loginError').innerHTML = '';
+    document.getElementById('loginForm').reset();
+  }
+
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  loginModal.addEventListener('click', (e) => {
+    if (e.target === loginModal) closeModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Login form
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const errEl = document.getElementById('loginError');
+    errEl.innerHTML = '';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+    try {
+      const res = await api('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: document.getElementById('loginEmail').value.trim(),
+          password: document.getElementById('loginPassword').value
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Login failed');
+      localStorage.setItem('token', data.token);
+      closeModal();
+      renderNav();
+      if (pendingSpaceId) {
+        window.location.href = `space.html?id=${pendingSpaceId}`;
+      }
+    } catch (err) {
+      errEl.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+  });
+
+  // Spaces data + search
+  let allSpaces = [];
+
+  function renderSpaces(spaces) {
+    const grid = document.getElementById('spacesGrid');
+    if (spaces.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-state-icon">&#x1F3E2;</div>
+          <div class="empty-state-text">No spaces found</div>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = spaces.map(s => `
+      <div class="space-card">
+        <div class="space-card-name">${escHtml(s.name)}</div>
+        <div class="space-card-meta">
+          <div class="space-card-meta-item">
+            <span class="icon">&#x1F4CD;</span>
+            <span>${escHtml(s.address)}</span>
+          </div>
+          <div class="space-card-meta-item">
+            <span class="icon">&#x1F4DE;</span>
+            <span>${escHtml(s.tel || '—')}</span>
+          </div>
+        </div>
+        <div>
+          <span class="space-card-hours">
+            &#x23F0; ${escHtml(s.openTime || '?')} – ${escHtml(s.closeTime || '?')}
+          </span>
+        </div>
+        <div class="space-card-footer">
+          <button class="btn btn-primary btn-block" onclick="handleBookNow('${escHtml(s._id)}')">Book Now</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function handleBookNow(spaceId) {
+    if (!isLoggedIn()) {
+      pendingSpaceId = spaceId;
+      openModal();
+    } else {
+      window.location.href = `space.html?id=${spaceId}`;
+    }
+  }
+
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) {
+      renderSpaces(allSpaces);
+      return;
+    }
+    const filtered = allSpaces.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      (s.address || '').toLowerCase().includes(q)
+    );
+    renderSpaces(filtered);
+  });
+
+  async function loadSpaces() {
+    try {
+      const res = await api('/coworkingSpaces');
+      const data = await res.json();
+      // handle both { data: [...] } and direct array
+      allSpaces = Array.isArray(data) ? data : (data.data || []);
+      renderSpaces(allSpaces);
+    } catch (err) {
+      document.getElementById('spacesGrid').innerHTML = `
+        <div class="alert alert-error" style="grid-column:1/-1;">
+          Failed to load spaces. Make sure the server is running.
+        </div>
+      `;
+    }
+  }
+
+  renderNav();
+  loadSpaces();
+</script>
+</body>
+</html>

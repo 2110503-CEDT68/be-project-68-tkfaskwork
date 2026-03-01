@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Suggest – CoWork</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .recommend-layout {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .prompt-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+    }
+    .prompt-icon {
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+    .prompt-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      letter-spacing: -0.4px;
+    }
+    .prompt-description {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 380px;
+      line-height: 1.6;
+    }
+    .result-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .result-header {
+      background: var(--primary-light);
+      border-bottom: 1px solid var(--primary-light-2);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .result-header-icon {
+      font-size: 1.2rem;
+    }
+    .result-header-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .result-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .result-space-name {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-dark);
+    }
+    .result-reason {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 12px 14px;
+      border-left: 3px solid var(--primary);
+    }
+    .alternatives-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+    .alternatives-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .alternative-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.875rem;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .alternative-item .alt-icon {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .thinking-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+    }
+    .thinking-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .thinking-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+    .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-logo">CoWork</a>
+    <div class="navbar-links">
+      <a href="index.html">Browse</a>
+      <a href="bookings.html">My Bookings</a>
+      <a href="recommend.html" class="active">&#10024; AI Suggest</a>
+    </div>
+    <div class="navbar-auth" id="navAuth"></div>
+  </div>
+</nav>
+
+<!-- CONTENT -->
+<div class="recommend-layout">
+
+  <!-- Prompt card -->
+  <div class="prompt-card" id="promptCard">
+    <div class="prompt-icon">&#10024;</div>
+    <div class="prompt-title">AI Space Recommender</div>
+    <p class="prompt-description">
+      Get a personalized co-working space recommendation based on your booking history and preferences.
+    </p>
+    <button class="btn btn-primary btn-lg" id="recommendBtn" onclick="getRecommendation()">
+      Get My Recommendation
+    </button>
+  </div>
+
+  <!-- Dynamic result area -->
+  <div id="resultArea"></div>
+
+</div>
+
+<script>
+  const API = 'http://localhost:5000/api/v1';
+
+  const api = (path, opts = {}) => fetch(API + path, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(localStorage.getItem('token') ? { Authorization: 'Bearer ' + localStorage.getItem('token') } : {})
+    },
+    ...opts
+  });
+
+  function isLoggedIn() { return !!localStorage.getItem('token'); }
+
+  function getUserName() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return null;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.name || payload.email || 'User';
+    } catch { return 'User'; }
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Auth guard
+  if (!isLoggedIn()) {
+    window.location.href = 'index.html';
+  }
+
+  // Render nav
+  function renderNav() {
+    const navAuth = document.getElementById('navAuth');
+    navAuth.innerHTML = `
+      <span class="user-greeting">Hi, ${getUserName()}</span>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button>
+    `;
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      window.location.href = 'index.html';
+    });
+  }
+
+  renderNav();
+
+  async function getRecommendation() {
+    const btn = document.getElementById('recommendBtn');
+    const resultArea = document.getElementById('resultArea');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+
+    // Show thinking state
+    resultArea.innerHTML = `
+      <div class="thinking-card">
+        <div class="thinking-dots">
+          <div class="thinking-dot"></div>
+          <div class="thinking-dot"></div>
+          <div class="thinking-dot"></div>
+        </div>
+        <div style="font-size:0.9rem;color:var(--text-muted);font-weight:500;">
+          Analyzing your booking history...
+        </div>
+      </div>
+    `;
+
+    try {
+      const res = await api('/recommend', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Recommendation failed');
+
+      const rec = data.data || data;
+      renderResult(rec);
+    } catch (err) {
+      resultArea.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '&#10024; Get Another Recommendation';
+    }
+  }
+
+  function renderResult(rec) {
+    const resultArea = document.getElementById('resultArea');
+
+    // Normalize fields — API may vary
+    const spaceName = rec.recommendedSpace || rec.space || rec.name || '—';
+    const reason = rec.reason || rec.description || rec.explanation || '';
+    const alternatives = rec.alternatives || rec.alternativeSpaces || [];
+
+    let alternativesHtml = '';
+    if (alternatives.length > 0) {
+      alternativesHtml = `
+        <div class="alternatives-title">Alternative Spaces</div>
+        <div class="alternatives-list">
+          ${alternatives.map(alt => {
+            const altName = typeof alt === 'string' ? alt : (alt.name || alt.space || JSON.stringify(alt));
+            return `
+              <div class="alternative-item">
+                <span class="alt-icon">&#x1F3E2;</span>
+                <span>${escHtml(altName)}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    resultArea.innerHTML = `
+      <div class="result-card">
+        <div class="result-header">
+          <span class="result-header-icon">&#10024;</span>
+          <span class="result-header-title">Recommended for You</span>
+        </div>
+        <div class="result-body">
+          <div class="result-space-name">${escHtml(spaceName)}</div>
+          ${reason ? `<div class="result-reason">${escHtml(reason)}</div>` : ''}
+          ${alternativesHtml}
+          <div style="margin-top:4px;">
+            <a href="index.html" class="btn btn-outline btn-sm">Browse All Spaces</a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+</script>
+</body>
+</html>

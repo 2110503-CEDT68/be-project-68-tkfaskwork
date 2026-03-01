@@ -1,0 +1,297 @@
+{
+  "info": {
+    "name": "CoWork Space API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api/v1" },
+    { "key": "userToken", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "spaceId", "value": "" },
+    { "key": "reservationId", "value": "" },
+    { "key": "apptDate", "value": "" },
+    { "key": "newApptDate", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Setup - Register & Login",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Register succeeds or user exists', () => pm.expect(pm.response.code).to.be.oneOf([200, 400]));",
+            "const j = pm.response.json();",
+            "if (j.token) pm.collectionVariables.set('userToken', j.token);"
+          ]}}],
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"name\":\"Newman User\",\"tel\":\"0812345678\",\"email\":\"user@newman-test.com\",\"password\":\"password123\"}" }
+          }
+        },
+        {
+          "name": "Register Admin",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Register admin or already exists', () => pm.expect(pm.response.code).to.be.oneOf([200, 400]));"
+          ]}}],
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"name\":\"Admin User\",\"tel\":\"0898765432\",\"email\":\"admin@newman-test.com\",\"password\":\"admin123\",\"role\":\"admin\"}" }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('User login 200', () => pm.response.to.have.status(200));",
+            "pm.test('Has token', () => { const j = pm.response.json(); pm.expect(j.success).to.be.true; pm.expect(j.token).to.be.a('string'); pm.collectionVariables.set('userToken', j.token); });"
+          ]}}],
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"user@newman-test.com\",\"password\":\"password123\"}" }
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Admin login 200', () => pm.response.to.have.status(200));",
+            "pm.test('Has admin token', () => { const j = pm.response.json(); pm.expect(j.success).to.be.true; pm.collectionVariables.set('adminToken', j.token); });"
+          ]}}],
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"admin@newman-test.com\",\"password\":\"admin123\"}" }
+          }
+        },
+        {
+          "name": "Get Me",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Returns user', () => { const j = pm.response.json(); pm.expect(j.success).to.be.true; pm.expect(j.data.name).to.equal('Newman User'); });"
+          ]}}],
+          "request": {
+            "method": "GET", "url": "{{baseUrl}}/auth/me",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }]
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Logout 200', () => pm.response.to.have.status(200));",
+            "pm.test('Success', () => pm.expect(pm.response.json().success).to.be.true);"
+          ]}}],
+          "request": {
+            "method": "GET", "url": "{{baseUrl}}/auth/logout",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }]
+          }
+        },
+        {
+          "name": "Login User (re-login after logout)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Re-login 200', () => pm.response.to.have.status(200));",
+            "const j = pm.response.json(); pm.collectionVariables.set('userToken', j.token);"
+          ]}}],
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"user@newman-test.com\",\"password\":\"password123\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Admin - Manage Spaces",
+      "item": [
+        {
+          "name": "Create Space (Admin)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Create space 201', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+            "pm.test('Space data returned', () => { const j = pm.response.json(); pm.expect(j.success).to.be.true; pm.expect(j.data._id).to.be.a('string'); pm.collectionVariables.set('spaceId', j.data._id); });"
+          ]}}],
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/coworkingSpaces",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"name\":\"Test Space Newman\",\"address\":\"123 Test St, Bangkok\",\"tel\":\"021234567\",\"opentime\":\"08:00\",\"closetime\":\"20:00\"}" }
+          }
+        },
+        {
+          "name": "Update Space (Admin)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Update space 200', () => pm.response.to.have.status(200));",
+            "pm.test('Updated', () => pm.expect(pm.response.json().success).to.be.true);"
+          ]}}],
+          "request": {
+            "method": "PUT", "url": "{{baseUrl}}/coworkingSpaces/{{spaceId}}",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"tel\":\"029999999\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Public - Browse Spaces",
+      "item": [
+        {
+          "name": "Get All Spaces (Public, no auth)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Returns spaces array', () => { const j = pm.response.json(); pm.expect(j.success).to.be.true; pm.expect(j.data).to.be.an('array'); pm.expect(j.data.length).to.be.above(0); });"
+          ]}}],
+          "request": {
+            "method": "GET", "url": "{{baseUrl}}/coworkingSpaces"
+          }
+        },
+        {
+          "name": "Get Single Space (Public)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Space data', () => { const j = pm.response.json(); pm.expect(j.success).to.be.true; pm.expect(j.data.name).to.equal('Test Space Newman'); });"
+          ]}}],
+          "request": {
+            "method": "GET", "url": "{{baseUrl}}/coworkingSpaces/{{spaceId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Reservations CRUD",
+      "item": [
+        {
+          "name": "Create Reservation",
+          "event": [
+            { "listen": "prerequest", "script": { "exec": [
+              "const d = new Date(); d.setDate(d.getDate()+1); d.setHours(10,0,0,0);",
+              "pm.collectionVariables.set('apptDate', d.toISOString());"
+            ]}},
+            { "listen": "test", "script": { "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Has QR code', () => { const j = pm.response.json(); pm.expect(j.success).to.be.true; pm.expect(j.data.qrCode).to.include('data:image/png'); pm.collectionVariables.set('reservationId', j.data._id); });"
+            ]}}
+          ],
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/coworkingSpaces/{{spaceId}}/reservations",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{userToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"apptDate\":\"{{apptDate}}\"}" }
+          }
+        },
+        {
+          "name": "Get All Reservations (User sees own only)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Returns array', () => { const j = pm.response.json(); pm.expect(j.success).to.be.true; pm.expect(j.data).to.be.an('array'); });"
+          ]}}],
+          "request": {
+            "method": "GET", "url": "{{baseUrl}}/reservations",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }]
+          }
+        },
+        {
+          "name": "Get Single Reservation",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Has apptDate', () => { const j = pm.response.json(); pm.expect(j.success).to.be.true; pm.expect(j.data).to.have.property('apptDate'); });"
+          ]}}],
+          "request": {
+            "method": "GET", "url": "{{baseUrl}}/reservations/{{reservationId}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }]
+          }
+        },
+        {
+          "name": "Update Reservation (User)",
+          "event": [
+            { "listen": "prerequest", "script": { "exec": [
+              "const d = new Date(); d.setDate(d.getDate()+2); d.setHours(11,0,0,0);",
+              "pm.collectionVariables.set('newApptDate', d.toISOString());"
+            ]}},
+            { "listen": "test", "script": { "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Updated', () => pm.expect(pm.response.json().success).to.be.true);"
+            ]}}
+          ],
+          "request": {
+            "method": "PUT", "url": "{{baseUrl}}/reservations/{{reservationId}}",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{userToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"apptDate\":\"{{newApptDate}}\"}" }
+          }
+        },
+        {
+          "name": "Get All Reservations (Admin sees all)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Admin sees all', () => pm.expect(pm.response.json().success).to.be.true);"
+          ]}}],
+          "request": {
+            "method": "GET", "url": "{{baseUrl}}/reservations",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }]
+          }
+        },
+        {
+          "name": "Delete Reservation (User)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Deleted', () => pm.expect(pm.response.json().success).to.be.true);"
+          ]}}],
+          "request": {
+            "method": "DELETE", "url": "{{baseUrl}}/reservations/{{reservationId}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Extra Credit",
+      "item": [
+        {
+          "name": "AI Recommend",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Has recommendation', () => { const j = pm.response.json(); pm.expect(j.success).to.be.true; pm.expect(j.data).to.have.property('recommended'); });"
+          ]}}],
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/recommend",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }]
+          }
+        },
+        {
+          "name": "Unauthorized Access (no token)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 401', () => pm.response.to.have.status(401));",
+            "pm.test('Access denied', () => pm.expect(pm.response.json().success).to.be.false);"
+          ]}}],
+          "request": {
+            "method": "GET", "url": "{{baseUrl}}/reservations"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Cleanup",
+      "item": [
+        {
+          "name": "Delete Space (Admin)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Deleted', () => pm.expect(pm.response.json().success).to.be.true);"
+          ]}}],
+          "request": {
+            "method": "DELETE", "url": "{{baseUrl}}/coworkingSpaces/{{spaceId}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }]
+          }
+        }
+      ]
+    }
+  ]
+}

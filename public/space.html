@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Space Detail – CoWork</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .detail-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .detail-header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .detail-header-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+    .detail-layout {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .info-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+    .info-card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 16px;
+    }
+    .info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .label {
+      font-weight: 600;
+      color: var(--text-dark);
+      min-width: 100px;
+      flex-shrink: 0;
+    }
+    .booking-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .booking-card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+    .success-box {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+    .success-icon {
+      width: 52px;
+      height: 52px;
+      background: #F0FDF4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .success-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #16A34A;
+    }
+    .success-detail {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-logo">CoWork</a>
+    <div class="navbar-links">
+      <a href="index.html">Browse</a>
+      <a href="bookings.html">My Bookings</a>
+      <a href="recommend.html">&#10024; AI Suggest</a>
+    </div>
+    <div class="navbar-auth" id="navAuth"></div>
+  </div>
+</nav>
+
+<!-- DETAIL HEADER -->
+<div class="detail-header">
+  <div class="detail-header-inner">
+    <a href="index.html" class="back-link">&#8592; Back</a>
+    <span style="color:var(--border);">|</span>
+    <span class="detail-header-title" id="headerTitle">Loading space...</span>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="detail-layout">
+  <div id="pageContent">
+    <div class="info-card">
+      <div class="skeleton" style="height:20px;width:50%;margin-bottom:16px;"></div>
+      <div class="skeleton" style="height:14px;width:90%;margin-bottom:8px;"></div>
+      <div class="skeleton" style="height:14px;width:70%;margin-bottom:8px;"></div>
+      <div class="skeleton" style="height:14px;width:60%;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:5000/api/v1';
+
+  const api = (path, opts = {}) => fetch(API + path, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(localStorage.getItem('token') ? { Authorization: 'Bearer ' + localStorage.getItem('token') } : {})
+    },
+    ...opts
+  });
+
+  function isLoggedIn() { return !!localStorage.getItem('token'); }
+
+  function getUserName() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return null;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.name || payload.email || 'User';
+    } catch { return 'User'; }
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Redirect if not logged in
+  if (!isLoggedIn()) {
+    window.location.href = 'index.html';
+  }
+
+  // Get space id from URL
+  const params = new URLSearchParams(window.location.search);
+  const spaceId = params.get('id');
+  if (!spaceId) window.location.href = 'index.html';
+
+  // Render nav
+  function renderNav() {
+    const navAuth = document.getElementById('navAuth');
+    if (isLoggedIn()) {
+      navAuth.innerHTML = `
+        <span class="user-greeting">Hi, ${getUserName()}</span>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button>
+      `;
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        window.location.href = 'index.html';
+      });
+    }
+  }
+
+  renderNav();
+
+  let spaceData = null;
+
+  async function loadSpace() {
+    try {
+      const res = await api(`/coworkingSpaces/${spaceId}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to load space');
+      spaceData = data.data || data;
+      renderPage();
+    } catch (err) {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="alert alert-error">${err.message}</div>
+      `;
+    }
+  }
+
+  function renderPage() {
+    const s = spaceData;
+    document.getElementById('headerTitle').textContent = s.name;
+    document.title = `${s.name} – CoWork`;
+
+    document.getElementById('pageContent').innerHTML = `
+      <!-- Info Card -->
+      <div class="info-card">
+        <div class="info-card-title">${escHtml(s.name)}</div>
+        <div class="info-row">
+          <span class="label">&#x1F4CD; Address</span>
+          <span>${escHtml(s.address || '—')}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">&#x1F4DE; Telephone</span>
+          <span>${escHtml(s.tel || '—')}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">&#x23F0; Hours</span>
+          <span>${escHtml(s.openTime || '?')} – ${escHtml(s.closeTime || '?')}</span>
+        </div>
+      </div>
+
+      <!-- Booking Form -->
+      <div class="booking-card" id="bookingSection">
+        <div class="booking-card-title">Reserve a Time Slot</div>
+        <div id="bookingAlert"></div>
+        <div class="form-group">
+          <label class="form-label" for="apptDate">Date &amp; Time</label>
+          <input type="datetime-local" id="apptDate" class="input" required />
+        </div>
+        <button class="btn btn-primary btn-lg" id="bookBtn" onclick="handleBook()">Confirm Booking</button>
+      </div>
+
+      <!-- Success (hidden initially) -->
+      <div class="success-box" id="successBox" style="display:none;"></div>
+    `;
+
+    // Set min datetime to now
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('apptDate').min = now.toISOString().slice(0, 16);
+  }
+
+  async function handleBook() {
+    const alertEl = document.getElementById('bookingAlert');
+    const btn = document.getElementById('bookBtn');
+    const apptDate = document.getElementById('apptDate').value;
+    alertEl.innerHTML = '';
+
+    if (!apptDate) {
+      alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:4px;">Please select a date and time.</div>';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Booking...';
+
+    try {
+      const res = await api(`/coworkingSpaces/${spaceId}/reservations`, {
+        method: 'POST',
+        body: JSON.stringify({ apptDate: new Date(apptDate).toISOString() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Booking failed');
+
+      const reservation = data.data || data;
+      const formattedDate = new Date(apptDate).toLocaleString('en-GB', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+
+      // Hide booking form
+      document.getElementById('bookingSection').style.display = 'none';
+
+      // Show success
+      const successBox = document.getElementById('successBox');
+      successBox.style.display = 'flex';
+      successBox.innerHTML = `
+        <div class="success-icon">&#10003;</div>
+        <div>
+          <div class="success-title">Booking Confirmed!</div>
+          <div class="success-detail" style="margin-top:4px;">${escHtml(spaceData.name)}</div>
+          <div class="success-detail">${escHtml(formattedDate)}</div>
+        </div>
+        ${reservation.qrCode ? `
+          <div class="qr-container">
+            <img src="${reservation.qrCode}" alt="QR Code" />
+            <span class="qr-label">Booking QR Code</span>
+          </div>
+        ` : ''}
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+          <a href="bookings.html" class="btn btn-outline">View My Bookings</a>
+          <a href="index.html" class="btn btn-ghost">Browse More Spaces</a>
+        </div>
+      `;
+    } catch (err) {
+      alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:4px;">${err.message}</div>`;
+      btn.disabled = false;
+      btn.textContent = 'Confirm Booking';
+    }
+  }
+
+  loadSpace();
+</script>
+</body>
+</html>
