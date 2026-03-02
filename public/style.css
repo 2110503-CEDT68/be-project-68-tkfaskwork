@@ -311,13 +311,63 @@ img { max-width: 100%; display: block; }
 .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
 .badge-blue { background: var(--primary-light); color: var(--primary); }
 
+/* ===== HAMBURGER MENU ===== */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-btn);
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+.menu-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.menu-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.menu-toggle.open span:nth-child(2) { opacity: 0; }
+.menu-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  background: var(--primary-hover);
+  padding: 8px 16px 16px;
+  gap: 4px;
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a {
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 10px 12px;
+  border-radius: var(--radius-btn);
+  transition: background var(--transition);
+}
+.mobile-menu a:hover, .mobile-menu a.active { background: rgba(255,255,255,0.12); color: #fff; text-decoration: none; }
+.mobile-menu-auth { display: flex; gap: 8px; padding: 10px 12px 4px; }
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 640px) {
-  .navbar-inner { padding: 0 16px; gap: 12px; }
-  .navbar-links a { padding: 6px 8px; font-size: 0.82rem; }
+  .navbar-inner { padding: 0 16px; gap: 8px; }
+  .navbar-links { display: none; }
+  .navbar-auth { display: none; }
+  .menu-toggle { display: flex; }
+  .hero { padding: 40px 16px; }
   .hero-title { font-size: 1.5rem; }
-  .page-container { padding: 24px 16px; }
-  .spaces-grid { grid-template-columns: 1fr; }
+  .hero-subtitle { font-size: 0.9rem; }
+  .page-container { padding: 20px 14px; }
+  .spaces-grid { grid-template-columns: 1fr; gap: 14px; }
   .modal { padding: 20px; }
+  .space-card { padding: 16px; }
 }
-@media (max-width: 400px) { .navbar-links { display: none; } }

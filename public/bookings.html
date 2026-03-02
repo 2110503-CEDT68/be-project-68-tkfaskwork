@@ -4,116 +4,109 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Bookings – CoWork</title>
-  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#384795', dark: '#2d3a7a', light: '#eef0fa', light2: '#d4d9f0' }
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    .booking-list { display: flex; flex-direction: column; gap: 14px; }
-    .booking-item {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-card);
-      box-shadow: var(--shadow);
-      padding: 20px;
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-    }
-    .booking-item-body { flex: 1; min-width: 0; }
-    .booking-item-name { font-size: 0.95rem; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
-    .booking-item-address { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px; }
-    .booking-item-date {
-      display: inline-flex;
-      align-items: center;
-      background: var(--primary-light);
-      color: var(--primary);
-      font-size: 0.78rem;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-    .booking-item-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-    .booking-item-qr { flex-shrink: 0; }
-    .cancel-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
-    @media (max-width: 520px) {
-      .booking-item { flex-direction: column; }
-      .booking-item-qr { align-self: center; }
-    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .skeleton { background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:6px; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .spinner { display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,0.3); border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite; flex-shrink:0; }
   </style>
 </head>
-<body>
+<body class="bg-slate-50 text-gray-900 min-h-screen">
 
-<nav class="navbar">
-  <div class="navbar-inner">
-    <a href="index.html" class="navbar-logo">CoWork</a>
-    <div class="navbar-links">
-      <a href="index.html">Browse</a>
-      <a href="bookings.html" class="active">My Bookings</a>
-      <a href="recommend.html">AI Suggest</a>
+<nav class="bg-primary sticky top-0 z-50 shadow-md">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 h-[60px] flex items-center gap-4">
+    <a href="index.html" class="text-white font-bold text-lg shrink-0 no-underline hover:opacity-90">CoWork</a>
+    <div class="hidden md:flex items-center gap-0.5 flex-1">
+      <a href="index.html" class="text-white/70 hover:text-white hover:bg-white/10 text-sm font-medium px-3 py-1.5 rounded no-underline transition-colors">Browse</a>
+      <a href="bookings.html" class="bg-white/15 text-white text-sm font-medium px-3 py-1.5 rounded no-underline">My Bookings</a>
+      <a href="recommend.html" class="text-white/70 hover:text-white hover:bg-white/10 text-sm font-medium px-3 py-1.5 rounded no-underline transition-colors">AI Suggest</a>
     </div>
-    <div class="navbar-auth" id="navAuth"></div>
+    <div class="hidden md:flex items-center gap-2 ml-auto shrink-0" id="navAuth"></div>
+    <button class="md:hidden ml-auto flex flex-col justify-center gap-[5px] p-1.5 rounded hover:bg-white/10" id="menuToggle" aria-label="Open menu">
+      <span class="block w-[22px] h-0.5 bg-white rounded"></span>
+      <span class="block w-[22px] h-0.5 bg-white rounded"></span>
+      <span class="block w-[22px] h-0.5 bg-white rounded"></span>
+    </button>
+  </div>
+  <div class="hidden md:!hidden" id="mobileMenu">
+    <div class="bg-primary-dark flex flex-col gap-1 px-4 pt-2 pb-4">
+      <a href="index.html" class="text-white/85 hover:bg-white/10 hover:text-white px-3 py-2.5 rounded text-sm font-medium no-underline transition-colors">Browse</a>
+      <a href="bookings.html" class="text-white/85 hover:bg-white/10 hover:text-white px-3 py-2.5 rounded text-sm font-medium no-underline transition-colors">My Bookings</a>
+      <a href="recommend.html" class="text-white/85 hover:bg-white/10 hover:text-white px-3 py-2.5 rounded text-sm font-medium no-underline transition-colors">✨ AI Suggest</a>
+      <div class="flex flex-wrap gap-2 pt-2 px-3" id="mobileAuth"></div>
+    </div>
   </div>
 </nav>
 
-<main class="page-container">
-  <div style="margin-bottom:24px;">
-    <h1 class="page-title">My Bookings</h1>
-    <p class="page-subtitle">Manage your upcoming reservations</p>
+<main class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+  <div class="mb-6">
+    <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">My Bookings</h1>
+    <p class="text-sm text-gray-500 mt-1">Manage your upcoming reservations</p>
   </div>
   <div id="bookingsList">
-    <div class="booking-list">
-      <div class="booking-item">
-        <div class="booking-item-body" style="width:100%;">
-          <div class="skeleton" style="height:16px;width:45%;margin-bottom:8px;"></div>
-          <div class="skeleton" style="height:12px;width:70%;margin-bottom:10px;"></div>
-          <div class="skeleton" style="height:24px;width:35%;border-radius:20px;"></div>
-        </div>
+    <div class="flex flex-col gap-3.5">
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+        <div class="skeleton h-4 w-[45%] mb-2"></div>
+        <div class="skeleton h-3 w-[70%] mb-2.5"></div>
+        <div class="skeleton h-6 w-[35%] rounded-full"></div>
       </div>
-      <div class="booking-item">
-        <div class="booking-item-body" style="width:100%;">
-          <div class="skeleton" style="height:16px;width:50%;margin-bottom:8px;"></div>
-          <div class="skeleton" style="height:12px;width:65%;margin-bottom:10px;"></div>
-          <div class="skeleton" style="height:24px;width:40%;border-radius:20px;"></div>
-        </div>
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+        <div class="skeleton h-4 w-1/2 mb-2"></div>
+        <div class="skeleton h-3 w-[65%] mb-2.5"></div>
+        <div class="skeleton h-6 w-[40%] rounded-full"></div>
       </div>
     </div>
   </div>
 </main>
 
 <!-- DETAIL MODAL -->
-<div class="modal-overlay" id="detailModal">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle" style="max-width:480px;">
-    <div class="modal-header">
-      <h2 class="modal-title" id="detailModalTitle">Booking Detail</h2>
-      <button class="modal-close" id="detailModalClose" aria-label="Close">&times;</button>
+<div class="fixed inset-0 bg-gray-900/50 z-[200] p-5 hidden items-center justify-center" id="detailModal">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-[480px] p-7 flex flex-col gap-4" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+    <div class="flex items-center justify-between">
+      <h2 class="text-[1.1rem] font-bold text-gray-900" id="detailModalTitle">Booking Detail</h2>
+      <button class="text-gray-400 hover:bg-gray-100 p-1 rounded text-xl leading-none transition-colors" id="detailModalClose" aria-label="Close">&times;</button>
     </div>
-    <div id="detailModalBody" style="display:flex;flex-direction:column;gap:14px;"></div>
+    <div id="detailModalBody" class="flex flex-col gap-3.5"></div>
   </div>
 </div>
 
 <!-- EDIT MODAL -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
-    <div class="modal-header">
-      <h2 class="modal-title" id="editModalTitle">Edit Booking</h2>
-      <button class="modal-close" id="editModalClose" aria-label="Close">&times;</button>
+<div class="fixed inset-0 bg-gray-900/50 z-[200] p-5 hidden items-center justify-center" id="editModal">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-[420px] p-7 flex flex-col gap-4" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <div class="flex items-center justify-between">
+      <h2 class="text-[1.1rem] font-bold text-gray-900" id="editModalTitle">Edit Booking</h2>
+      <button class="text-gray-400 hover:bg-gray-100 p-1 rounded text-xl leading-none transition-colors" id="editModalClose" aria-label="Close">&times;</button>
     </div>
     <div id="editAlert"></div>
-    <div class="form-group">
-      <label class="form-label" for="editApptDate">New Date</label>
-      <input type="date" id="editApptDate" class="input" required />
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[0.82rem] font-semibold text-gray-900" for="editApptDate">New Date</label>
+      <input type="date" id="editApptDate" class="w-full px-3.5 py-2.5 border border-gray-200 rounded text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-45 disabled:cursor-not-allowed" required />
     </div>
-    <div class="form-group">
-      <label class="form-label" for="editApptStartSlot">Start Time</label>
-      <select id="editApptStartSlot" class="input" required>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[0.82rem] font-semibold text-gray-900" for="editApptStartSlot">Start Time</label>
+      <select id="editApptStartSlot" class="w-full px-3.5 py-2.5 border border-gray-200 rounded text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-45 disabled:cursor-not-allowed" required>
         <option value="">Select start time</option>
       </select>
     </div>
-    <div class="form-group">
-      <label class="form-label" for="editApptEndSlot">End Time</label>
-      <select id="editApptEndSlot" class="input" required>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[0.82rem] font-semibold text-gray-900" for="editApptEndSlot">End Time</label>
+      <select id="editApptEndSlot" class="w-full px-3.5 py-2.5 border border-gray-200 rounded text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-45 disabled:cursor-not-allowed" required>
         <option value="">Select end time</option>
       </select>
     </div>
-    <button class="btn btn-primary btn-block" id="editSaveBtn">Save Changes</button>
+    <button class="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-2.5 rounded text-sm transition-colors disabled:opacity-45 disabled:cursor-not-allowed flex items-center justify-center gap-1.5" id="editSaveBtn">Save Changes</button>
   </div>
 </div>
 
@@ -243,7 +236,6 @@
     return `${startText} – ${endText}`;
   }
 
-  // Returns true if now is within 1 hour before apptDate (or past)
   function isWithinOneHour(apptDate) {
     const oneHourBefore = new Date(new Date(apptDate).getTime() - 60 * 60 * 1000);
     return Date.now() >= oneHourBefore.getTime();
@@ -251,24 +243,32 @@
 
   if (!isLoggedIn()) window.location.href = 'index.html';
 
+  const menuToggle = document.getElementById('menuToggle');
+  const mobileMenu = document.getElementById('mobileMenu');
+  menuToggle.addEventListener('click', () => { mobileMenu.classList.toggle('hidden'); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('nav')) mobileMenu.classList.add('hidden'); });
+
   function renderNav() {
     const navAuth = document.getElementById('navAuth');
+    const mobileAuth = document.getElementById('mobileAuth');
+    const ghostBtn = 'text-white/75 border border-white/30 hover:bg-white/10 hover:text-white font-semibold px-3 py-1.5 rounded text-sm transition-colors cursor-pointer bg-transparent';
     navAuth.innerHTML = `
-      <span class="user-greeting">Hi, ${getUserName()}</span>
-      <button class="btn btn-ghost btn-sm" id="logoutBtn">Sign Out</button>
+      <span class="text-sm text-white/70 font-medium">Hi, ${getUserName()}</span>
+      <button class="${ghostBtn}" id="logoutBtn">Sign Out</button>
     `;
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('token');
-      window.location.href = 'index.html';
-    });
+    mobileAuth.innerHTML = `
+      <span class="text-white/70 text-sm self-center">Hi, ${getUserName()}</span>
+      <button class="${ghostBtn}" id="mobileLogoutBtn">Sign Out</button>
+    `;
+    document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.removeItem('token'); window.location.href = 'index.html'; });
+    document.getElementById('mobileLogoutBtn').addEventListener('click', () => { localStorage.removeItem('token'); window.location.href = 'index.html'; });
   }
   renderNav();
 
-  // Detail modal
   const detailModal = document.getElementById('detailModal');
-  document.getElementById('detailModalClose').addEventListener('click', () => detailModal.classList.remove('open'));
-  detailModal.addEventListener('click', (e) => { if (e.target === detailModal) detailModal.classList.remove('open'); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') detailModal.classList.remove('open'); });
+  document.getElementById('detailModalClose').addEventListener('click', () => { detailModal.classList.add('hidden'); detailModal.classList.remove('flex'); });
+  detailModal.addEventListener('click', (e) => { if (e.target === detailModal) { detailModal.classList.add('hidden'); detailModal.classList.remove('flex'); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { detailModal.classList.add('hidden'); detailModal.classList.remove('flex'); } });
 
   function openDetailModal(b) {
     const space = b.coworkingSpace || {};
@@ -279,29 +279,37 @@
     const dateRange = formatRange(b.apptDate, b.apptEnd);
     const qrCode = b.qrCode || '';
 
-    document.getElementById('detailModalBody').innerHTML = `
-      <div style="background:var(--primary);border-radius:8px;padding:16px 18px;color:#fff;">
-        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.65);margin-bottom:4px;">Space</div>
-        <div style="font-size:1rem;font-weight:700;">${escHtml(spaceName)}</div>
-        ${address ? `<div style="font-size:0.82rem;color:rgba(255,255,255,0.72);margin-top:2px;">${escHtml(address)}</div>` : ''}
+    const row = (label, value) => `
+      <div class="flex justify-between text-sm">
+        <span class="text-gray-500 font-semibold">${label}</span>
+        <span class="text-right max-w-[60%]">${value}</span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        ${tel ? `<div style="display:flex;justify-content:space-between;font-size:0.875rem;"><span style="color:var(--text-muted);font-weight:600;">Tel</span><span>${escHtml(tel)}</span></div>` : ''}
-        ${hours ? `<div style="display:flex;justify-content:space-between;font-size:0.875rem;"><span style="color:var(--text-muted);font-weight:600;">Hours</span><span>${escHtml(hours)}</span></div>` : ''}
-        <div style="display:flex;justify-content:space-between;font-size:0.875rem;"><span style="color:var(--text-muted);font-weight:600;">Date &amp; Time</span><span style="text-align:right;max-width:60%;">${escHtml(dateRange)}</span></div>
-        <div style="display:flex;justify-content:space-between;font-size:0.875rem;align-items:flex-start;">
-          <span style="color:var(--text-muted);font-weight:600;">Booking ID</span>
-          <span style="font-family:monospace;font-size:0.75rem;color:var(--text-muted);text-align:right;max-width:60%;word-break:break-all;">${escHtml(b._id)}</span>
+    `;
+
+    document.getElementById('detailModalBody').innerHTML = `
+      <div class="bg-primary rounded-lg px-4 py-4 text-white">
+        <div class="text-[0.7rem] font-bold uppercase tracking-wide text-white/65 mb-1">Space</div>
+        <div class="font-bold text-base">${escHtml(spaceName)}</div>
+        ${address ? `<div class="text-sm text-white/70 mt-0.5">${escHtml(address)}</div>` : ''}
+      </div>
+      <div class="flex flex-col gap-2.5">
+        ${tel ? row('Tel', escHtml(tel)) : ''}
+        ${hours ? row('Hours', escHtml(hours)) : ''}
+        ${row('Date &amp; Time', `<span class="text-right">${escHtml(dateRange)}</span>`)}
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-500 font-semibold">Booking ID</span>
+          <span class="font-mono text-xs text-gray-400 text-right max-w-[60%] break-all">${escHtml(b._id)}</span>
         </div>
       </div>
       ${qrCode ? `
-        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
-          <img src="${escHtml(qrCode)}" alt="Booking QR Code" style="width:160px;height:160px;border-radius:6px;" />
-          <span style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Scan at check-in</span>
+        <div class="flex flex-col items-center gap-2 p-4 bg-slate-50 rounded-lg border border-gray-200">
+          <img src="${escHtml(qrCode)}" alt="Booking QR Code" class="w-40 h-40 rounded" />
+          <span class="text-[0.72rem] text-gray-400 font-bold uppercase tracking-wide">Scan at check-in</span>
         </div>
-      ` : '<div style="font-size:0.82rem;color:var(--text-muted);text-align:center;">No QR code available for this booking.</div>'}
+      ` : '<div class="text-sm text-gray-400 text-center">No QR code available for this booking.</div>'}
     `;
-    detailModal.classList.add('open');
+    detailModal.classList.remove('hidden');
+    detailModal.classList.add('flex');
   }
 
   let editingId = null;
@@ -341,11 +349,16 @@
     }
     dateInput.min = getBangkokTodayDateValue();
     startSelect.onchange = () => populateEndSlots('editApptEndSlot', allSlots, startSelect.value);
-    editModal.classList.add('open');
+    editModal.classList.remove('hidden');
+    editModal.classList.add('flex');
     dateInput.focus();
   }
 
-  function closeEditModal() { editModal.classList.remove('open'); editingId = null; }
+  function closeEditModal() {
+    editModal.classList.add('hidden');
+    editModal.classList.remove('flex');
+    editingId = null;
+  }
 
   document.getElementById('editSaveBtn').addEventListener('click', async () => {
     const alertEl = document.getElementById('editAlert');
@@ -355,13 +368,13 @@
     const apptEndSlot = document.getElementById('editApptEndSlot').value;
     alertEl.innerHTML = '';
     if (!apptDate || !apptStartSlot || !apptEndSlot) {
-      alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:8px;">Please select date, start time, and end time.</div>';
+      alertEl.innerHTML = '<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium mb-2">Please select date, start time, and end time.</div>';
       return;
     }
     const apptStartISO = bangkokDateTimeToISO(apptDate, apptStartSlot);
     const apptEndISO = bangkokDateTimeToISO(apptDate, apptEndSlot);
     if (!apptStartISO || !apptEndISO) {
-      alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:8px;">Invalid date/time selection.</div>';
+      alertEl.innerHTML = '<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium mb-2">Invalid date/time selection.</div>';
       return;
     }
     btn.disabled = true;
@@ -376,7 +389,7 @@
       closeEditModal();
       await loadBookings();
     } catch (err) {
-      alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:8px;">${err.message}</div>`;
+      alertEl.innerHTML = `<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium mb-2">${err.message}</div>`;
     } finally {
       btn.disabled = false;
       btn.textContent = 'Save Changes';
@@ -401,16 +414,18 @@
     const container = document.getElementById('bookingsList');
     if (bookings.length === 0) {
       container.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-title">No bookings yet</div>
-          <div class="empty-state-text">Browse available spaces to make your first reservation.</div>
-          <a href="index.html" class="btn btn-primary" style="margin-top:20px;">Browse Spaces</a>
+        <div class="text-center py-16 text-gray-500">
+          <div class="font-semibold text-gray-900 mb-1.5">No bookings yet</div>
+          <div class="text-sm mb-5">Browse available spaces to make your first reservation.</div>
+          <a href="index.html" class="bg-primary hover:bg-primary-dark text-white font-semibold px-4 py-2 rounded text-sm transition-colors no-underline">Browse Spaces</a>
         </div>
       `;
       return;
     }
 
-    container.innerHTML = `<div class="booking-list">${
+    const btnSm = 'font-semibold px-3 py-1.5 rounded text-xs transition-colors';
+
+    container.innerHTML = `<div class="flex flex-col gap-3.5">${
       bookings.map(b => {
         const space = b.coworkingSpace || {};
         const spaceName = space.name || b.spaceName || 'Unknown Space';
@@ -419,32 +434,28 @@
         const locked = isWithinOneHour(b.apptDate);
 
         return `
-          <div class="booking-item" id="booking-${escHtml(b._id)}">
-            <div class="booking-item-body">
-              <div class="booking-item-name">${escHtml(spaceName)}</div>
-              ${address ? `<div class="booking-item-address">${escHtml(address)}</div>` : ''}
-              <div class="booking-item-date">${escHtml(formatRange(b.apptDate, b.apptEnd))}</div>
-              <div class="booking-item-actions">
-                <button class="btn btn-primary btn-sm" onclick="openDetailModal(bookingsData.find(x=>x._id==='${escHtml(b._id)}'))">
-                  View Detail
-                </button>
-                <button class="btn btn-outline btn-sm"
+          <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 flex gap-4 items-start sm:flex-row flex-col" id="booking-${escHtml(b._id)}">
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-gray-900 text-[0.95rem] mb-1">${escHtml(spaceName)}</div>
+              ${address ? `<div class="text-sm text-gray-400 mb-2.5">${escHtml(address)}</div>` : ''}
+              <div class="inline-flex items-center bg-primary-light text-primary text-xs font-semibold px-2.5 py-1 rounded-full">${escHtml(formatRange(b.apptDate, b.apptEnd))}</div>
+              <div class="flex gap-2 mt-3.5 flex-wrap">
+                <button class="${btnSm} bg-primary hover:bg-primary-dark text-white" onclick="openDetailModal(bookingsData.find(x=>x._id==='${escHtml(b._id)}'))">View Detail</button>
+                <button class="${btnSm} border border-primary text-primary hover:bg-primary-light ${locked ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''}"
                   ${locked ? 'disabled title="Cannot edit within 1 hour of booking"' : `onclick="openEditModal('${escHtml(b._id)}','${escHtml(b.apptDate)}','${escHtml(b.apptEnd||'')}','${escHtml(space.opentime||'')}','${escHtml(space.closetime||'')}')"`}>
                   Edit
                 </button>
-                <button class="btn btn-danger btn-sm"
+                <button class="${btnSm} border border-red-200 text-red-600 hover:bg-red-50 ${locked ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''}"
                   ${locked ? 'disabled title="Cannot cancel within 1 hour of booking"' : `onclick="deleteBooking('${escHtml(b._id)}')"`}>
                   Cancel
                 </button>
               </div>
-              ${locked ? '<div class="cancel-hint">Modifications locked — within 1 hour of booking time.</div>' : ''}
+              ${locked ? '<div class="text-xs text-gray-400 mt-1.5">Modifications locked — within 1 hour of booking time.</div>' : ''}
             </div>
             ${qrCode ? `
-              <div class="booking-item-qr">
-                <div class="qr-container">
-                  <img src="${escHtml(qrCode)}" alt="QR Code" />
-                  <span class="qr-label">Check-in QR</span>
-                </div>
+              <div class="flex flex-col items-center gap-1.5 p-3.5 bg-slate-50 rounded-lg border border-gray-200 shrink-0 self-center sm:self-start">
+                <img src="${escHtml(qrCode)}" alt="QR Code" class="w-[110px] h-[110px] rounded" />
+                <span class="text-[0.72rem] text-gray-400 font-bold uppercase tracking-wide">Check-in QR</span>
               </div>
             ` : ''}
           </div>
@@ -464,7 +475,7 @@
       bookingsData = all.filter(b => b.qrCode);
       renderBookings(bookingsData);
     } catch (err) {
-      document.getElementById('bookingsList').innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+      document.getElementById('bookingsList').innerHTML = `<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium">${err.message}</div>`;
     }
   }
 

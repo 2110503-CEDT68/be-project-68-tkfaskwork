@@ -4,91 +4,67 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Space Detail – CoWork</title>
-  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#384795', dark: '#2d3a7a', light: '#eef0fa', light2: '#d4d9f0' }
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    .detail-header {
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
-    }
-    .detail-header-inner {
-      max-width: 1100px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .detail-header-sep { color: var(--border); font-size: 1.2rem; }
-    .detail-header-title { font-size: 1rem; font-weight: 700; color: var(--text-dark); }
-    .detail-layout { max-width: 680px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 20px; }
-    .info-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow); padding: 24px; }
-    .info-card-title { font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 18px; }
-    .info-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      font-size: 0.875rem;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .info-row:last-child { border-bottom: none; }
-    .info-row .label { font-weight: 600; color: var(--text-dark); min-width: 90px; flex-shrink: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
-    .info-row .value { color: var(--text-muted); }
-    .booking-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow); padding: 24px; display: flex; flex-direction: column; gap: 18px; }
-    .booking-card-title { font-size: 1rem; font-weight: 700; color: var(--text-dark); }
-    .success-box {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-card);
-      box-shadow: var(--shadow);
-      padding: 32px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      text-align: center;
-    }
-    .success-icon {
-      width: 48px; height: 48px;
-      background: #f0fdf4;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem; color: #16a34a; font-weight: 700;
-    }
-    .success-title { font-size: 1.05rem; font-weight: 700; color: #16a34a; }
-    .success-detail { font-size: 0.875rem; color: var(--text-muted); }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .skeleton { background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:6px; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .spinner { display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,0.3); border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite; flex-shrink:0; }
   </style>
 </head>
-<body>
+<body class="bg-slate-50 text-gray-900 min-h-screen">
 
-<nav class="navbar">
-  <div class="navbar-inner">
-    <a href="index.html" class="navbar-logo">CoWork</a>
-    <div class="navbar-links">
-      <a href="index.html">Browse</a>
-      <a href="bookings.html">My Bookings</a>
-      <a href="recommend.html">AI Suggest</a>
+<nav class="bg-primary sticky top-0 z-50 shadow-md">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 h-[60px] flex items-center gap-4">
+    <a href="index.html" class="text-white font-bold text-lg shrink-0 no-underline hover:opacity-90">CoWork</a>
+    <div class="hidden md:flex items-center gap-0.5 flex-1">
+      <a href="index.html" class="text-white/70 hover:text-white hover:bg-white/10 text-sm font-medium px-3 py-1.5 rounded no-underline transition-colors">Browse</a>
+      <a href="bookings.html" class="text-white/70 hover:text-white hover:bg-white/10 text-sm font-medium px-3 py-1.5 rounded no-underline transition-colors">My Bookings</a>
+      <a href="recommend.html" class="text-white/70 hover:text-white hover:bg-white/10 text-sm font-medium px-3 py-1.5 rounded no-underline transition-colors">AI Suggest</a>
     </div>
-    <div class="navbar-auth" id="navAuth"></div>
+    <div class="hidden md:flex items-center gap-2 ml-auto shrink-0" id="navAuth"></div>
+    <button class="md:hidden ml-auto flex flex-col justify-center gap-[5px] p-1.5 rounded hover:bg-white/10" id="menuToggle" aria-label="Open menu">
+      <span class="block w-[22px] h-0.5 bg-white rounded"></span>
+      <span class="block w-[22px] h-0.5 bg-white rounded"></span>
+      <span class="block w-[22px] h-0.5 bg-white rounded"></span>
+    </button>
+  </div>
+  <div class="hidden md:!hidden" id="mobileMenu">
+    <div class="bg-primary-dark flex flex-col gap-1 px-4 pt-2 pb-4">
+      <a href="index.html" class="text-white/85 hover:bg-white/10 hover:text-white px-3 py-2.5 rounded text-sm font-medium no-underline transition-colors">Browse</a>
+      <a href="bookings.html" class="text-white/85 hover:bg-white/10 hover:text-white px-3 py-2.5 rounded text-sm font-medium no-underline transition-colors">My Bookings</a>
+      <a href="recommend.html" class="text-white/85 hover:bg-white/10 hover:text-white px-3 py-2.5 rounded text-sm font-medium no-underline transition-colors">✨ AI Suggest</a>
+      <div class="flex flex-wrap gap-2 pt-2 px-3" id="mobileAuth"></div>
+    </div>
   </div>
 </nav>
 
-<div class="detail-header">
-  <div class="detail-header-inner">
-    <a href="index.html" class="back-link">&larr; Back</a>
-    <span class="detail-header-sep">|</span>
-    <span class="detail-header-title" id="headerTitle">Loading...</span>
+<!-- Sub-header breadcrumb -->
+<div class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3.5">
+  <div class="max-w-5xl mx-auto flex items-center gap-3">
+    <a href="index.html" class="inline-flex items-center gap-1 text-gray-500 hover:text-primary text-sm font-medium no-underline transition-colors">&larr; Back</a>
+    <span class="text-gray-200 text-lg">|</span>
+    <span class="font-bold text-gray-900 text-sm" id="headerTitle">Loading...</span>
   </div>
 </div>
 
-<div class="detail-layout">
-  <div id="pageContent">
-    <div class="info-card">
-      <div class="skeleton" style="height:18px;width:50%;margin-bottom:18px;"></div>
-      <div class="skeleton" style="height:13px;width:90%;margin-bottom:8px;"></div>
-      <div class="skeleton" style="height:13px;width:70%;margin-bottom:8px;"></div>
-      <div class="skeleton" style="height:13px;width:55%;"></div>
-    </div>
+<div class="max-w-[680px] mx-auto px-4 sm:px-6 py-8 flex flex-col gap-5" id="pageContent">
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+    <div class="skeleton h-[18px] w-1/2 mb-5"></div>
+    <div class="skeleton h-3 w-[90%] mb-2"></div>
+    <div class="skeleton h-3 w-[70%] mb-2"></div>
+    <div class="skeleton h-3 w-[55%]"></div>
   </div>
 </div>
 
@@ -189,22 +165,33 @@
   const spaceId = params.get('id');
   if (!spaceId) window.location.href = 'index.html';
 
+  const menuToggle = document.getElementById('menuToggle');
+  const mobileMenu = document.getElementById('mobileMenu');
+  menuToggle.addEventListener('click', () => { mobileMenu.classList.toggle('hidden'); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('nav')) mobileMenu.classList.add('hidden'); });
+
   function renderNav() {
     const navAuth = document.getElementById('navAuth');
+    const mobileAuth = document.getElementById('mobileAuth');
+    const ghostBtn = 'text-white/75 border border-white/30 hover:bg-white/10 hover:text-white font-semibold px-3 py-1.5 rounded text-sm transition-colors cursor-pointer bg-transparent';
     if (isLoggedIn()) {
       navAuth.innerHTML = `
-        <span class="user-greeting">Hi, ${getUserName()}</span>
-        <button class="btn btn-ghost btn-sm" id="logoutBtn">Sign Out</button>
+        <span class="text-sm text-white/70 font-medium">Hi, ${getUserName()}</span>
+        <button class="${ghostBtn}" id="logoutBtn">Sign Out</button>
       `;
-      document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('token');
-        window.location.href = 'index.html';
-      });
+      mobileAuth.innerHTML = `
+        <span class="text-white/70 text-sm self-center">Hi, ${getUserName()}</span>
+        <button class="${ghostBtn}" id="mobileLogoutBtn">Sign Out</button>
+      `;
+      document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.removeItem('token'); window.location.href = 'index.html'; });
+      document.getElementById('mobileLogoutBtn').addEventListener('click', () => { localStorage.removeItem('token'); window.location.href = 'index.html'; });
     }
   }
 
   renderNav();
   let spaceData = null;
+
+  const inputCls = 'w-full px-3.5 py-2.5 border border-gray-200 rounded text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-45 disabled:cursor-not-allowed';
 
   async function loadSpace() {
     try {
@@ -214,7 +201,7 @@
       spaceData = data.data || data;
       renderPage();
     } catch (err) {
-      document.getElementById('pageContent').innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+      document.getElementById('pageContent').innerHTML = `<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium">${err.message}</div>`;
     }
   }
 
@@ -223,46 +210,44 @@
     document.getElementById('headerTitle').textContent = s.name;
     document.title = `${s.name} – CoWork`;
 
+    const infoRow = (label, value) => `
+      <div class="flex items-start gap-2.5 py-2.5 border-b border-gray-100 last:border-0 text-sm">
+        <span class="font-semibold text-gray-900 uppercase text-[0.8rem] tracking-wide min-w-[90px] shrink-0 pt-px">${label}</span>
+        <span class="text-gray-500">${value}</span>
+      </div>
+    `;
+
     document.getElementById('pageContent').innerHTML = `
-      <div class="info-card">
-        <div class="info-card-title">${escHtml(s.name)}</div>
-        <div class="info-row">
-          <span class="label">Address</span>
-          <span class="value">${escHtml(s.address || '—')}</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Telephone</span>
-          <span class="value">${escHtml(s.tel || '—')}</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Hours</span>
-          <span class="value">${escHtml(s.opentime || '?')} – ${escHtml(s.closetime || '?')}</span>
-        </div>
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div class="font-bold text-[1.1rem] text-gray-900 mb-4">${escHtml(s.name)}</div>
+        ${infoRow('Address', escHtml(s.address || '—'))}
+        ${infoRow('Telephone', escHtml(s.tel || '—'))}
+        ${infoRow('Hours', escHtml(s.opentime || '?') + ' – ' + escHtml(s.closetime || '?'))}
       </div>
 
-      <div class="booking-card" id="bookingSection">
-        <div class="booking-card-title">Reserve a Time Slot</div>
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col gap-4" id="bookingSection">
+        <div class="font-bold text-gray-900">Reserve a Time Slot</div>
         <div id="bookingAlert"></div>
-        <div class="form-group">
-          <label class="form-label" for="apptDate">Date</label>
-          <input type="date" id="apptDate" class="input" required />
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.82rem] font-semibold text-gray-900" for="apptDate">Date</label>
+          <input type="date" id="apptDate" class="${inputCls}" required />
         </div>
-        <div class="form-group">
-          <label class="form-label" for="apptStartSlot">Start Time</label>
-          <select id="apptStartSlot" class="input" required>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.82rem] font-semibold text-gray-900" for="apptStartSlot">Start Time</label>
+          <select id="apptStartSlot" class="${inputCls}" required>
             <option value="">Select start time</option>
           </select>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="apptEndSlot">End Time</label>
-          <select id="apptEndSlot" class="input" required>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.82rem] font-semibold text-gray-900" for="apptEndSlot">End Time</label>
+          <select id="apptEndSlot" class="${inputCls}" required>
             <option value="">Select end time</option>
           </select>
         </div>
-        <button class="btn btn-primary btn-lg" id="bookBtn" onclick="handleBook()">Confirm Booking</button>
+        <button class="bg-primary hover:bg-primary-dark text-white font-semibold px-7 py-3 rounded text-base transition-colors disabled:opacity-45 disabled:cursor-not-allowed flex items-center justify-center gap-1.5" id="bookBtn" onclick="handleBook()">Confirm Booking</button>
       </div>
 
-      <div class="success-box" id="successBox" style="display:none;"></div>
+      <div class="hidden bg-white border border-gray-200 rounded-xl shadow-sm p-8 flex flex-col items-center gap-4 text-center" id="successBox"></div>
     `;
 
     document.getElementById('apptDate').min = getBangkokTodayDateValue();
@@ -282,7 +267,7 @@
       startSelect.disabled = true;
       document.getElementById('apptEndSlot').disabled = true;
       document.getElementById('bookingAlert').innerHTML =
-        '<div class="alert alert-error" style="margin-bottom:4px;">No hourly slots available for this space.</div>';
+        '<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium mb-1">No hourly slots available for this space.</div>';
     }
   }
 
@@ -295,14 +280,14 @@
     alertEl.innerHTML = '';
 
     if (!apptDate || !apptStartSlot || !apptEndSlot) {
-      alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:4px;">Please select date, start time, and end time.</div>';
+      alertEl.innerHTML = '<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium mb-1">Please select date, start time, and end time.</div>';
       return;
     }
 
     const startISO = bangkokDateTimeToISO(apptDate, apptStartSlot);
     const endISO = bangkokDateTimeToISO(apptDate, apptEndSlot);
     if (!startISO || !endISO) {
-      alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:4px;">Invalid date/time selection.</div>';
+      alertEl.innerHTML = '<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium mb-1">Invalid date/time selection.</div>';
       return;
     }
 
@@ -325,27 +310,28 @@
 
       document.getElementById('bookingSection').style.display = 'none';
       const successBox = document.getElementById('successBox');
-      successBox.style.display = 'flex';
+      successBox.classList.remove('hidden');
+      successBox.classList.add('flex');
       successBox.innerHTML = `
-        <div class="success-icon">&#10003;</div>
+        <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-600 font-bold text-xl">&#10003;</div>
         <div>
-          <div class="success-title">Booking Confirmed</div>
-          <div class="success-detail" style="margin-top:4px;">${escHtml(spaceData.name)}</div>
-          <div class="success-detail">${escHtml(startText)} – ${escHtml(endText)}</div>
+          <div class="font-bold text-green-600 text-[1.05rem]">Booking Confirmed</div>
+          <div class="text-sm text-gray-500 mt-1">${escHtml(spaceData.name)}</div>
+          <div class="text-sm text-gray-500">${escHtml(startText)} – ${escHtml(endText)}</div>
         </div>
         ${reservation.qrCode ? `
-          <div class="qr-container">
-            <img src="${reservation.qrCode}" alt="Booking QR Code" />
-            <span class="qr-label">Scan at check-in</span>
+          <div class="flex flex-col items-center gap-2 p-3.5 bg-slate-50 rounded border border-gray-200">
+            <img src="${reservation.qrCode}" alt="Booking QR Code" class="w-28 h-28 rounded" />
+            <span class="text-[0.72rem] text-gray-400 font-bold uppercase tracking-wide">Scan at check-in</span>
           </div>
         ` : ''}
-        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
-          <a href="bookings.html" class="btn btn-primary">View My Bookings</a>
-          <a href="index.html" class="btn btn-ghost-dark">Browse More Spaces</a>
+        <div class="flex gap-2.5 flex-wrap justify-center">
+          <a href="bookings.html" class="bg-primary hover:bg-primary-dark text-white font-semibold px-4 py-2 rounded text-sm transition-colors no-underline">View My Bookings</a>
+          <a href="index.html" class="border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-semibold px-4 py-2 rounded text-sm transition-colors no-underline">Browse More Spaces</a>
         </div>
       `;
     } catch (err) {
-      alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:4px;">${err.message}</div>`;
+      alertEl.innerHTML = `<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium mb-1">${err.message}</div>`;
       btn.disabled = false;
       btn.textContent = 'Confirm Booking';
     }

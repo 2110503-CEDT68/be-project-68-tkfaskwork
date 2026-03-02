@@ -4,77 +4,58 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Register – CoWork</title>
-  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#384795', dark: '#2d3a7a', light: '#eef0fa', light2: '#d4d9f0' }
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    .register-page {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      background: var(--bg);
-    }
-    .register-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-card);
-      box-shadow: var(--shadow);
-      padding: 36px 32px;
-      width: 100%;
-      max-width: 420px;
-    }
-    .register-logo {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 28px;
-      display: inline-block;
-      text-decoration: none;
-      letter-spacing: 0.02em;
-    }
-    .register-logo:hover { text-decoration: none; opacity: 0.85; }
-    .register-title { font-size: 1.4rem; font-weight: 800; color: var(--text-dark); margin-bottom: 4px; letter-spacing: -0.3px; }
-    .register-subtitle { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 28px; }
-    .register-form { display: flex; flex-direction: column; gap: 16px; }
-    @media (max-width: 480px) { .register-card { padding: 24px 20px; } }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .spinner { display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,0.3); border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite; flex-shrink:0; }
   </style>
 </head>
-<body>
-<div class="register-page">
-  <div class="register-card">
-    <a href="index.html" class="register-logo">CoWork</a>
-    <h1 class="register-title">Create Account</h1>
-    <p class="register-subtitle">Join CoWork to start booking spaces</p>
+<body class="bg-slate-50 text-gray-900 min-h-screen flex items-center justify-center p-6">
 
-    <div id="registerAlert"></div>
+<div class="bg-white border border-gray-200 rounded-xl shadow-md w-full max-w-[420px] p-8 sm:p-9">
+  <a href="index.html" class="text-primary font-bold text-base no-underline hover:opacity-80 inline-block mb-7">CoWork</a>
+  <h1 class="text-[1.4rem] font-extrabold text-gray-900 tracking-tight mb-1">Create Account</h1>
+  <p class="text-sm text-gray-500 mb-7">Join CoWork to start booking spaces</p>
 
-    <form id="registerForm" class="register-form">
-      <div class="form-group">
-        <label class="form-label" for="regName">Full Name</label>
-        <input type="text" id="regName" class="input" placeholder="Your full name" required autocomplete="name" />
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="regTel">Telephone</label>
-        <input type="tel" id="regTel" class="input" placeholder="e.g. 0812345678" autocomplete="tel" />
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="regEmail">Email</label>
-        <input type="email" id="regEmail" class="input" placeholder="you@example.com" required autocomplete="email" />
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="regPassword">Password</label>
-        <input type="password" id="regPassword" class="input" placeholder="At least 6 characters" required autocomplete="new-password" />
-      </div>
-      <button type="submit" class="btn btn-primary btn-block btn-lg" id="registerBtn" style="margin-top:4px;">
-        Create Account
-      </button>
-    </form>
+  <div id="registerAlert"></div>
 
-    <hr class="divider" style="margin-top:24px;margin-bottom:16px;" />
-    <p style="text-align:center;font-size:0.875rem;color:var(--text-muted);">
-      Already have an account? <a href="index.html">Sign in</a>
-    </p>
-  </div>
+  <form id="registerForm" class="flex flex-col gap-4">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[0.82rem] font-semibold text-gray-900" for="regName">Full Name</label>
+      <input type="text" id="regName" class="w-full px-3.5 py-2.5 border border-gray-200 rounded text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 placeholder:text-gray-400" placeholder="Your full name" required autocomplete="name" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[0.82rem] font-semibold text-gray-900" for="regTel">Telephone</label>
+      <input type="tel" id="regTel" class="w-full px-3.5 py-2.5 border border-gray-200 rounded text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 placeholder:text-gray-400" placeholder="e.g. 0812345678" autocomplete="tel" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[0.82rem] font-semibold text-gray-900" for="regEmail">Email</label>
+      <input type="email" id="regEmail" class="w-full px-3.5 py-2.5 border border-gray-200 rounded text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 placeholder:text-gray-400" placeholder="you@example.com" required autocomplete="email" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[0.82rem] font-semibold text-gray-900" for="regPassword">Password</label>
+      <input type="password" id="regPassword" class="w-full px-3.5 py-2.5 border border-gray-200 rounded text-sm text-gray-900 bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 placeholder:text-gray-400" placeholder="At least 6 characters" required autocomplete="new-password" />
+    </div>
+    <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded text-base transition-colors disabled:opacity-45 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 mt-1" id="registerBtn">
+      Create Account
+    </button>
+  </form>
+
+  <hr class="border-gray-200 my-6" />
+  <p class="text-center text-sm text-gray-500">
+    Already have an account? <a href="index.html" class="text-primary hover:underline">Sign in</a>
+  </p>
 </div>
 
 <script>
@@ -104,7 +85,7 @@
     const password = document.getElementById('regPassword').value;
 
     if (password.length < 6) {
-      alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:8px;">Password must be at least 6 characters.</div>';
+      alertEl.innerHTML = '<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium mb-2">Password must be at least 6 characters.</div>';
       btn.disabled = false;
       btn.textContent = 'Create Account';
       return;
@@ -117,10 +98,10 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Registration failed');
       localStorage.setItem('token', data.token);
-      alertEl.innerHTML = '<div class="alert alert-success" style="margin-bottom:8px;">Account created. Redirecting...</div>';
+      alertEl.innerHTML = '<div class="bg-green-50 text-green-700 border border-green-200 px-4 py-3 rounded text-sm font-medium mb-2">Account created. Redirecting...</div>';
       setTimeout(() => { window.location.href = 'index.html'; }, 800);
     } catch (err) {
-      alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:8px;">${err.message}</div>`;
+      alertEl.innerHTML = `<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium mb-2">${err.message}</div>`;
       btn.disabled = false;
       btn.textContent = 'Create Account';
     }

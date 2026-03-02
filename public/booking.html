@@ -4,101 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Booking Details – CoWork</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-      background: #f4f6fb;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#384795', dark: '#2d3a7a', light: '#eef0fa' }
+          }
+        }
+      }
     }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07), 0 6px 24px rgba(56,71,149,0.10);
-      max-width: 420px;
-      width: 100%;
-      overflow: hidden;
-    }
-    .card-header {
-      background: #384795;
-      color: #fff;
-      padding: 28px 24px 24px;
-      text-align: center;
-    }
-    .card-header-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: rgba(255,255,255,0.65);
-      margin-bottom: 8px;
-    }
-    .card-header h1 { font-size: 1.2rem; font-weight: 700; }
-    .card-header p { font-size: 0.84rem; color: rgba(255,255,255,0.72); margin-top: 4px; }
-    .badge {
-      display: inline-block;
-      background: rgba(255,255,255,0.18);
-      color: #fff;
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 4px 14px;
-      border-radius: 99px;
-      margin-top: 12px;
-      letter-spacing: 0.05em;
-      border: 1px solid rgba(255,255,255,0.25);
-    }
-    .card-body { padding: 24px; }
-    .section-title {
-      font-size: 0.68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #9ca3af;
-      margin-bottom: 14px;
-    }
-    .row {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-    .row-label { font-size: 0.75rem; color: #9ca3af; margin-bottom: 2px; }
-    .row-value { font-size: 0.9rem; font-weight: 600; color: #111827; }
-    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 20px 0; }
-    .id-box {
-      background: #f4f6fb;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      padding: 10px 14px;
-      font-family: monospace;
-      font-size: 0.75rem;
-      color: #6b7280;
-      word-break: break-all;
-    }
-    .state-box {
-      text-align: center;
-      padding: 40px 24px;
-    }
-    .state-box .state-title { font-size: 1rem; font-weight: 700; color: #111827; margin-bottom: 8px; }
-    .state-box .state-msg { font-size: 0.875rem; color: #6b7280; }
-    .error-header { background: #dc2626; }
-    .back-link {
-      display: inline-block;
-      margin-top: 10px;
-      font-size: 0.82rem;
-      color: rgba(255,255,255,0.8);
-      text-decoration: underline;
-    }
-  </style>
+  </script>
 </head>
-<body>
-  <div class="card" id="card">
-    <div class="state-box"><div class="state-msg">Loading booking details...</div></div>
+<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-5 font-sans">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-[420px] overflow-hidden" id="card">
+    <div class="p-10 text-center text-gray-400 text-sm">Loading booking details...</div>
   </div>
 
   <script>
@@ -109,12 +30,12 @@
       const card = document.getElementById('card');
       if (!id) {
         card.innerHTML = `
-          <div class="card-header error-header">
-            <div class="card-header-label">CoWork</div>
-            <h1>Invalid QR Code</h1>
-            <p>No booking ID was provided.</p>
+          <div class="bg-primary px-6 pt-7 pb-6 text-center text-white">
+            <div class="text-[0.7rem] font-bold uppercase tracking-widest text-white/65 mb-2">CoWork</div>
+            <h1 class="text-[1.2rem] font-bold">Invalid QR Code</h1>
+            <p class="text-sm text-white/70 mt-1">No booking ID was provided.</p>
           </div>
-          <div class="state-box"><div class="state-msg">Please scan a valid booking QR code.</div></div>
+          <div class="p-6 text-center text-sm text-gray-500">Please scan a valid booking QR code.</div>
         `;
         return;
       }
@@ -125,12 +46,12 @@
 
         if (!res.ok || !json.success) {
           card.innerHTML = `
-            <div class="card-header error-header">
-              <div class="card-header-label">CoWork</div>
-              <h1>Booking Not Found</h1>
-              <p>This QR code may be invalid or the booking was cancelled.</p>
+            <div class="bg-red-600 px-6 pt-7 pb-6 text-center text-white">
+              <div class="text-[0.7rem] font-bold uppercase tracking-widest text-white/65 mb-2">CoWork</div>
+              <h1 class="text-[1.2rem] font-bold">Booking Not Found</h1>
+              <p class="text-sm text-white/70 mt-1">This QR code may be invalid or the booking was cancelled.</p>
             </div>
-            <div class="state-box"><div class="state-msg">Please contact the front desk for assistance.</div></div>
+            <div class="p-6 text-center text-sm text-gray-500">Please contact the front desk for assistance.</div>
           `;
           return;
         }
@@ -149,60 +70,42 @@
           hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok'
         }) : null;
 
-        card.innerHTML = `
-          <div class="card-header">
-            <div class="card-header-label">CoWork</div>
-            <h1>${space.name}</h1>
-            <p>${space.address}</p>
-            <span class="badge">Confirmed</span>
+        const row = (label, value) => `
+          <div class="mb-3.5">
+            <div class="text-xs text-gray-400 mb-0.5">${label}</div>
+            <div class="text-[0.9rem] font-semibold text-gray-900">${value}</div>
           </div>
-          <div class="card-body">
-            <div class="section-title">Appointment</div>
-            <div class="row">
-              <div>
-                <div class="row-label">Date</div>
-                <div class="row-value">${dateStr}</div>
-              </div>
-            </div>
-            <div class="row">
-              <div>
-                <div class="row-label">Time</div>
-                <div class="row-value">${startTime}${endTime ? ' – ' + endTime : ''}</div>
-              </div>
-            </div>
-            <div class="row">
-              <div>
-                <div class="row-label">Space Hours</div>
-                <div class="row-value">${space.opentime} – ${space.closetime}</div>
-              </div>
-            </div>
-            <hr class="divider">
-            <div class="section-title">Guest</div>
-            <div class="row">
-              <div>
-                <div class="row-label">Name</div>
-                <div class="row-value">${user.name}</div>
-              </div>
-            </div>
-            <div class="row">
-              <div>
-                <div class="row-label">Tel</div>
-                <div class="row-value">${user.tel}</div>
-              </div>
-            </div>
-            <hr class="divider">
-            <div class="section-title">Booking ID</div>
-            <div class="id-box">${d._id}</div>
+        `;
+
+        card.innerHTML = `
+          <div class="bg-primary px-6 pt-7 pb-6 text-center text-white">
+            <div class="text-[0.7rem] font-bold uppercase tracking-widest text-white/65 mb-2">CoWork</div>
+            <h1 class="text-[1.2rem] font-bold">${space.name}</h1>
+            <p class="text-sm text-white/70 mt-1">${space.address}</p>
+            <span class="inline-block mt-3 bg-white/18 text-white text-xs font-bold px-3.5 py-1 rounded-full border border-white/25 tracking-wide">Confirmed</span>
+          </div>
+          <div class="p-6">
+            <div class="text-[0.68rem] font-bold uppercase tracking-wider text-gray-400 mb-3.5">Appointment</div>
+            ${row('Date', dateStr)}
+            ${row('Time', startTime + (endTime ? ' – ' + endTime : ''))}
+            ${row('Space Hours', space.opentime + ' – ' + space.closetime)}
+            <hr class="border-gray-100 my-5" />
+            <div class="text-[0.68rem] font-bold uppercase tracking-wider text-gray-400 mb-3.5">Guest</div>
+            ${row('Name', user.name)}
+            ${row('Tel', user.tel)}
+            <hr class="border-gray-100 my-5" />
+            <div class="text-[0.68rem] font-bold uppercase tracking-wider text-gray-400 mb-2">Booking ID</div>
+            <div class="bg-slate-50 border border-gray-200 rounded px-3.5 py-2.5 font-mono text-xs text-gray-500 break-all">${d._id}</div>
           </div>
         `;
       } catch (e) {
         document.getElementById('card').innerHTML = `
-          <div class="card-header error-header">
-            <div class="card-header-label">CoWork</div>
-            <h1>Connection Error</h1>
-            <p>Could not reach the server.</p>
+          <div class="bg-red-600 px-6 pt-7 pb-6 text-center text-white">
+            <div class="text-[0.7rem] font-bold uppercase tracking-widest text-white/65 mb-2">CoWork</div>
+            <h1 class="text-[1.2rem] font-bold">Connection Error</h1>
+            <p class="text-sm text-white/70 mt-1">Could not reach the server.</p>
           </div>
-          <div class="state-box"><div class="state-msg">Please check your connection and try again.</div></div>
+          <div class="p-6 text-center text-sm text-gray-500">Please check your connection and try again.</div>
         `;
       }
     }

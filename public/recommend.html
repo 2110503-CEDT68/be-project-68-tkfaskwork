@@ -4,129 +4,62 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Suggest – CoWork</title>
-  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#384795', dark: '#2d3a7a', light: '#eef0fa', light2: '#d4d9f0' }
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    .recommend-layout { max-width: 660px; margin: 0 auto; padding: 40px 24px; display: flex; flex-direction: column; gap: 20px; }
-    .prompt-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-card);
-      box-shadow: var(--shadow);
-      padding: 36px 32px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 14px;
-    }
-    .prompt-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      background: var(--primary-light);
-      padding: 4px 12px;
-      border-radius: 20px;
-    }
-    .prompt-title { font-size: 1.3rem; font-weight: 800; color: var(--text-dark); letter-spacing: -0.3px; }
-    .prompt-description { font-size: 0.875rem; color: var(--text-muted); max-width: 360px; line-height: 1.65; }
-    .result-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow); overflow: hidden; }
-    .result-header {
-      background: var(--primary);
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .result-header-title { font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.85); text-transform: uppercase; letter-spacing: 0.08em; }
-    .result-body { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
-    .result-space-name { font-size: 1.25rem; font-weight: 800; color: var(--text-dark); }
-    .result-reason {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      line-height: 1.65;
-      background: var(--bg);
-      border-radius: 8px;
-      padding: 14px 16px;
-      border-left: 3px solid var(--primary);
-    }
-    .result-section { display: flex; flex-direction: column; gap: 8px; }
-    .result-section-title {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-    }
-    .history-list { display: flex; flex-direction: column; gap: 6px; }
-    .history-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 9px 14px;
-      font-size: 0.84rem;
-    }
-    .history-space { font-weight: 600; color: var(--text-dark); }
-    .history-date { color: var(--text-muted); font-size: 0.8rem; }
-    .alternatives-list { display: flex; flex-direction: column; gap: 6px; }
-    .alternative-item {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 9px 14px;
-      font-size: 0.84rem;
-      color: var(--text-dark);
-    }
-    .thinking-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-card);
-      box-shadow: var(--shadow);
-      padding: 36px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-      text-align: center;
-    }
-    .thinking-dots { display: flex; gap: 6px; }
-    .thinking-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--primary);
-      animation: bounce 1.2s infinite ease-in-out;
-    }
-    .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
-    .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce { 0%,80%,100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .spinner { display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,0.3); border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite; flex-shrink:0; }
+    @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+    .thinking-dot { width:8px; height:8px; border-radius:50%; background:#384795; animation:bounce 1.2s infinite ease-in-out; }
+    .thinking-dot:nth-child(2){animation-delay:.2s}
+    .thinking-dot:nth-child(3){animation-delay:.4s}
   </style>
 </head>
-<body>
+<body class="bg-slate-50 text-gray-900 min-h-screen">
 
-<nav class="navbar">
-  <div class="navbar-inner">
-    <a href="index.html" class="navbar-logo">CoWork</a>
-    <div class="navbar-links">
-      <a href="index.html">Browse</a>
-      <a href="bookings.html">My Bookings</a>
-      <a href="recommend.html" class="active">AI Suggest</a>
+<nav class="bg-primary sticky top-0 z-50 shadow-md">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 h-[60px] flex items-center gap-4">
+    <a href="index.html" class="text-white font-bold text-lg shrink-0 no-underline hover:opacity-90">CoWork</a>
+    <div class="hidden md:flex items-center gap-0.5 flex-1">
+      <a href="index.html" class="text-white/70 hover:text-white hover:bg-white/10 text-sm font-medium px-3 py-1.5 rounded no-underline transition-colors">Browse</a>
+      <a href="bookings.html" class="text-white/70 hover:text-white hover:bg-white/10 text-sm font-medium px-3 py-1.5 rounded no-underline transition-colors">My Bookings</a>
+      <a href="recommend.html" class="bg-white/15 text-white text-sm font-medium px-3 py-1.5 rounded no-underline">AI Suggest</a>
     </div>
-    <div class="navbar-auth" id="navAuth"></div>
+    <div class="hidden md:flex items-center gap-2 ml-auto shrink-0" id="navAuth"></div>
+    <button class="md:hidden ml-auto flex flex-col justify-center gap-[5px] p-1.5 rounded hover:bg-white/10" id="menuToggle" aria-label="Open menu">
+      <span class="block w-[22px] h-0.5 bg-white rounded"></span>
+      <span class="block w-[22px] h-0.5 bg-white rounded"></span>
+      <span class="block w-[22px] h-0.5 bg-white rounded"></span>
+    </button>
+  </div>
+  <div class="hidden md:!hidden" id="mobileMenu">
+    <div class="bg-primary-dark flex flex-col gap-1 px-4 pt-2 pb-4">
+      <a href="index.html" class="text-white/85 hover:bg-white/10 hover:text-white px-3 py-2.5 rounded text-sm font-medium no-underline transition-colors">Browse</a>
+      <a href="bookings.html" class="text-white/85 hover:bg-white/10 hover:text-white px-3 py-2.5 rounded text-sm font-medium no-underline transition-colors">My Bookings</a>
+      <a href="recommend.html" class="text-white/85 hover:bg-white/10 hover:text-white px-3 py-2.5 rounded text-sm font-medium no-underline transition-colors">✨ AI Suggest</a>
+      <div class="flex flex-wrap gap-2 pt-2 px-3" id="mobileAuth"></div>
+    </div>
   </div>
 </nav>
 
-<div class="recommend-layout">
-  <div class="prompt-card" id="promptCard">
-    <span class="prompt-label">Powered by AI</span>
-    <div class="prompt-title">Space Recommender</div>
-    <p class="prompt-description">
+<div class="max-w-[660px] mx-auto px-4 sm:px-6 py-10 flex flex-col gap-5">
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-9 flex flex-col items-center text-center gap-3.5" id="promptCard">
+    <span class="text-[0.72rem] font-bold text-primary uppercase tracking-widest bg-primary-light px-3 py-1 rounded-full">Powered by AI</span>
+    <div class="text-[1.3rem] font-extrabold text-gray-900 tracking-tight">Space Recommender</div>
+    <p class="text-sm text-gray-500 max-w-[360px] leading-relaxed">
       Get a personalized co-working space recommendation based on your booking history.
     </p>
-    <button class="btn btn-primary btn-lg" id="recommendBtn" onclick="getRecommendation()">
+    <button class="bg-primary hover:bg-primary-dark text-white font-semibold px-7 py-3 rounded text-base transition-colors disabled:opacity-45 disabled:cursor-not-allowed flex items-center justify-center gap-1.5" id="recommendBtn" onclick="getRecommendation()">
       Get My Recommendation
     </button>
   </div>
@@ -163,16 +96,25 @@
 
   if (!isLoggedIn()) window.location.href = 'index.html';
 
+  const menuToggle = document.getElementById('menuToggle');
+  const mobileMenu = document.getElementById('mobileMenu');
+  menuToggle.addEventListener('click', () => { mobileMenu.classList.toggle('hidden'); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('nav')) mobileMenu.classList.add('hidden'); });
+
   function renderNav() {
     const navAuth = document.getElementById('navAuth');
+    const mobileAuth = document.getElementById('mobileAuth');
+    const ghostBtn = 'text-white/75 border border-white/30 hover:bg-white/10 hover:text-white font-semibold px-3 py-1.5 rounded text-sm transition-colors cursor-pointer bg-transparent';
     navAuth.innerHTML = `
-      <span class="user-greeting">Hi, ${getUserName()}</span>
-      <button class="btn btn-ghost btn-sm" id="logoutBtn">Sign Out</button>
+      <span class="text-sm text-white/70 font-medium">Hi, ${getUserName()}</span>
+      <button class="${ghostBtn}" id="logoutBtn">Sign Out</button>
     `;
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('token');
-      window.location.href = 'index.html';
-    });
+    mobileAuth.innerHTML = `
+      <span class="text-white/70 text-sm self-center">Hi, ${getUserName()}</span>
+      <button class="${ghostBtn}" id="mobileLogoutBtn">Sign Out</button>
+    `;
+    document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.removeItem('token'); window.location.href = 'index.html'; });
+    document.getElementById('mobileLogoutBtn').addEventListener('click', () => { localStorage.removeItem('token'); window.location.href = 'index.html'; });
   }
   renderNav();
 
@@ -184,13 +126,13 @@
     btn.innerHTML = '<span class="spinner"></span> Analyzing...';
 
     resultArea.innerHTML = `
-      <div class="thinking-card">
-        <div class="thinking-dots">
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-9 flex flex-col items-center gap-3.5 text-center">
+        <div class="flex gap-1.5">
           <div class="thinking-dot"></div>
           <div class="thinking-dot"></div>
           <div class="thinking-dot"></div>
         </div>
-        <div style="font-size:0.875rem;color:var(--text-muted);font-weight:500;">Analyzing your booking history...</div>
+        <div class="text-sm text-gray-500 font-medium">Analyzing your booking history...</div>
       </div>
     `;
 
@@ -211,7 +153,7 @@
 
       renderResult(recData.data || recData, history);
     } catch (err) {
-      resultArea.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+      resultArea.innerHTML = `<div class="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded text-sm font-medium">${err.message}</div>`;
     } finally {
       btn.disabled = false;
       btn.textContent = 'Get Another Recommendation';
@@ -228,18 +170,18 @@
     if (history && history.length > 0) {
       const recent = history.slice(0, 5);
       historyHtml = `
-        <div class="result-section">
-          <div class="result-section-title">Based on your recent bookings</div>
-          <div class="history-list">
+        <div class="flex flex-col gap-2">
+          <div class="text-[0.72rem] font-bold text-gray-400 uppercase tracking-wide">Based on your recent bookings</div>
+          <div class="flex flex-col gap-1.5">
             ${recent.map(r => {
               const name = r.coworkingSpace?.name || 'Unknown Space';
               const date = new Date(r.apptDate).toLocaleDateString('en-GB', {
                 timeZone: BANGKOK_TIMEZONE, weekday: 'short', month: 'short', day: 'numeric'
               });
               return `
-                <div class="history-item">
-                  <span class="history-space">${escHtml(name)}</span>
-                  <span class="history-date">${escHtml(date)}</span>
+                <div class="flex items-center justify-between bg-slate-50 border border-gray-200 rounded px-3.5 py-2.5 text-sm">
+                  <span class="font-semibold text-gray-900">${escHtml(name)}</span>
+                  <span class="text-gray-400 text-xs">${escHtml(date)}</span>
                 </div>
               `;
             }).join('')}
@@ -251,12 +193,12 @@
     let altHtml = '';
     if (alternatives.length > 0) {
       altHtml = `
-        <div class="result-section">
-          <div class="result-section-title">Alternative Spaces</div>
-          <div class="alternatives-list">
+        <div class="flex flex-col gap-2">
+          <div class="text-[0.72rem] font-bold text-gray-400 uppercase tracking-wide">Alternative Spaces</div>
+          <div class="flex flex-col gap-1.5">
             ${alternatives.map(alt => {
               const altName = typeof alt === 'string' ? alt : (alt.name || alt.space || JSON.stringify(alt));
-              return `<div class="alternative-item">${escHtml(altName)}</div>`;
+              return `<div class="bg-slate-50 border border-gray-200 rounded px-3.5 py-2.5 text-sm text-gray-900">${escHtml(altName)}</div>`;
             }).join('')}
           </div>
         </div>
@@ -264,17 +206,17 @@
     }
 
     resultArea.innerHTML = `
-      <div class="result-card">
-        <div class="result-header">
-          <span class="result-header-title">Recommended for You</span>
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="bg-primary px-5 py-3.5 flex items-center gap-2.5">
+          <span class="text-[0.78rem] font-bold text-white/85 uppercase tracking-wider">Recommended for You</span>
         </div>
-        <div class="result-body">
-          <div class="result-space-name">${escHtml(spaceName)}</div>
-          ${reason ? `<div class="result-reason">${escHtml(reason)}</div>` : ''}
+        <div class="p-5 sm:p-6 flex flex-col gap-4">
+          <div class="text-[1.25rem] font-extrabold text-gray-900">${escHtml(spaceName)}</div>
+          ${reason ? `<div class="text-sm text-gray-500 leading-relaxed bg-slate-50 rounded-lg px-4 py-3.5 border-l-[3px] border-primary">${escHtml(reason)}</div>` : ''}
           ${historyHtml}
           ${altHtml}
-          <div style="margin-top:4px;">
-            <a href="index.html" class="btn btn-outline btn-sm">Browse All Spaces</a>
+          <div class="pt-1">
+            <a href="index.html" class="border border-primary text-primary hover:bg-primary-light font-semibold px-3 py-1.5 rounded text-sm transition-colors no-underline">Browse All Spaces</a>
           </div>
         </div>
       </div>
