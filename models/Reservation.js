@@ -19,6 +19,9 @@ const ReservationSchema = new mongoose.Schema({
         ref: 'CoworkingSpace',
         required: true
     },
+    qrCode: {
+        type: String
+    },
     createdAt: {
         type: Date,
         default: Date.now

@@ -24,34 +24,19 @@
       max-width: 420px;
     }
     .register-logo {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--primary);
-      margin-bottom: 24px;
+      margin-bottom: 28px;
       display: inline-block;
       text-decoration: none;
+      letter-spacing: 0.02em;
     }
     .register-logo:hover { text-decoration: none; opacity: 0.85; }
-    .register-title {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--text-dark);
-      margin-bottom: 4px;
-      letter-spacing: -0.4px;
-    }
-    .register-subtitle {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      margin-bottom: 28px;
-    }
-    .register-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    @media (max-width: 480px) {
-      .register-card { padding: 24px 20px; }
-    }
+    .register-title { font-size: 1.4rem; font-weight: 800; color: var(--text-dark); margin-bottom: 4px; letter-spacing: -0.3px; }
+    .register-subtitle { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 28px; }
+    .register-form { display: flex; flex-direction: column; gap: 16px; }
+    @media (max-width: 480px) { .register-card { padding: 24px 20px; } }
   </style>
 </head>
 <body>
@@ -70,7 +55,7 @@
       </div>
       <div class="form-group">
         <label class="form-label" for="regTel">Telephone</label>
-        <input type="tel" id="regTel" class="input" placeholder="e.g. 081-234-5678" autocomplete="tel" />
+        <input type="tel" id="regTel" class="input" placeholder="e.g. 0812345678" autocomplete="tel" />
       </div>
       <div class="form-group">
         <label class="form-label" for="regEmail">Email</label>
@@ -80,7 +65,6 @@
         <label class="form-label" for="regPassword">Password</label>
         <input type="password" id="regPassword" class="input" placeholder="At least 6 characters" required autocomplete="new-password" />
       </div>
-
       <button type="submit" class="btn btn-primary btn-block btn-lg" id="registerBtn" style="margin-top:4px;">
         Create Account
       </button>
@@ -94,7 +78,7 @@
 </div>
 
 <script>
-  const API = 'http://localhost:5000/api/v1';
+  const API = '/api/v1';
 
   const api = (path, opts = {}) => fetch(API + path, {
     headers: {
@@ -104,10 +88,7 @@
     ...opts
   });
 
-  // If already logged in, redirect
-  if (localStorage.getItem('token')) {
-    window.location.href = 'index.html';
-  }
+  if (localStorage.getItem('token')) window.location.href = 'index.html';
 
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -132,16 +113,11 @@
     try {
       const body = { name, email, password };
       if (tel) body.tel = tel;
-
-      const res = await api('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(body)
-      });
+      const res = await api('/auth/register', { method: 'POST', body: JSON.stringify(body) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Registration failed');
-
       localStorage.setItem('token', data.token);
-      alertEl.innerHTML = '<div class="alert alert-success" style="margin-bottom:8px;">Account created! Redirecting...</div>';
+      alertEl.innerHTML = '<div class="alert alert-success" style="margin-bottom:8px;">Account created. Redirecting...</div>';
       setTimeout(() => { window.location.href = 'index.html'; }, 800);
     } catch (err) {
       alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:8px;">${err.message}</div>`;

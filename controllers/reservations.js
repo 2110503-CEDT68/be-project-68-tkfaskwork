@@ -257,13 +257,13 @@ exports.addReservation = async (req, res, next) => {
         if (existedReservations.length >= 3 && req.user.role !== 'admin') {
             return res.status(400).json({
                 success: false,
-                message: `The user with ID ${req.user.id} has already made 3 Reservations`
+                message: 'You have already made 3 reservations. Please cancel an existing one before booking again.'
             });
         }
 
         const reservation = await Reservation.create(req.body);
 
-        // Generate QR code (non-fatal)
+        // Generate QR code and persist it (non-fatal)
         let qrCode = null;
         try {
             qrCode = await generateQR({
@@ -272,6 +272,10 @@ exports.addReservation = async (req, res, next) => {
                 coworkingSpaceId: req.params.coworkingSpaceId,
                 apptDate: reservation.apptDate
             });
+            if (qrCode) {
+                reservation.qrCode = qrCode;
+                await reservation.save();
+            }
         } catch (qrErr) {
             console.log('QR generation failed (non-fatal):', qrErr.message);
         }

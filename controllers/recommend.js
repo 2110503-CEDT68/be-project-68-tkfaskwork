@@ -41,7 +41,7 @@ Reply ONLY with valid JSON in this exact format:
             headers: {
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json',
-                'HTTP-Referer': 'http://localhost:5000'
+                'HTTP-Referer': process.env.BASE_URL || 'http://localhost:5000'
             },
             body: JSON.stringify({
                 model: process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',

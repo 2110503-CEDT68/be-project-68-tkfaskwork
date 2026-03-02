@@ -6,11 +6,7 @@
   <title>My Bookings – CoWork</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .booking-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+    .booking-list { display: flex; flex-direction: column; gap: 14px; }
     .booking-item {
       background: var(--white);
       border: 1px solid var(--border);
@@ -21,44 +17,22 @@
       gap: 16px;
       align-items: flex-start;
     }
-    .booking-item-body {
-      flex: 1;
-      min-width: 0;
-    }
-    .booking-item-name {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--text-dark);
-      margin-bottom: 4px;
-    }
-    .booking-item-address {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
+    .booking-item-body { flex: 1; min-width: 0; }
+    .booking-item-name { font-size: 0.95rem; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+    .booking-item-address { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px; }
     .booking-item-date {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
       background: var(--primary-light);
       color: var(--primary);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       padding: 4px 10px;
       border-radius: 20px;
     }
-    .booking-item-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 14px;
-      flex-wrap: wrap;
-    }
-    .booking-item-qr {
-      flex-shrink: 0;
-    }
+    .booking-item-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .booking-item-qr { flex-shrink: 0; }
+    .cancel-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
     @media (max-width: 520px) {
       .booking-item { flex-direction: column; }
       .booking-item-qr { align-self: center; }
@@ -67,46 +41,53 @@
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
   <div class="navbar-inner">
     <a href="index.html" class="navbar-logo">CoWork</a>
     <div class="navbar-links">
       <a href="index.html">Browse</a>
       <a href="bookings.html" class="active">My Bookings</a>
-      <a href="recommend.html">&#10024; AI Suggest</a>
+      <a href="recommend.html">AI Suggest</a>
     </div>
     <div class="navbar-auth" id="navAuth"></div>
   </div>
 </nav>
 
-<!-- MAIN -->
 <main class="page-container">
   <div style="margin-bottom:24px;">
     <h1 class="page-title">My Bookings</h1>
     <p class="page-subtitle">Manage your upcoming reservations</p>
   </div>
-
   <div id="bookingsList">
-    <!-- skeletons -->
     <div class="booking-list">
       <div class="booking-item">
         <div class="booking-item-body" style="width:100%;">
-          <div class="skeleton" style="height:18px;width:45%;margin-bottom:8px;"></div>
-          <div class="skeleton" style="height:13px;width:70%;margin-bottom:10px;"></div>
-          <div class="skeleton" style="height:26px;width:35%;border-radius:20px;"></div>
+          <div class="skeleton" style="height:16px;width:45%;margin-bottom:8px;"></div>
+          <div class="skeleton" style="height:12px;width:70%;margin-bottom:10px;"></div>
+          <div class="skeleton" style="height:24px;width:35%;border-radius:20px;"></div>
         </div>
       </div>
       <div class="booking-item">
         <div class="booking-item-body" style="width:100%;">
-          <div class="skeleton" style="height:18px;width:50%;margin-bottom:8px;"></div>
-          <div class="skeleton" style="height:13px;width:65%;margin-bottom:10px;"></div>
-          <div class="skeleton" style="height:26px;width:40%;border-radius:20px;"></div>
+          <div class="skeleton" style="height:16px;width:50%;margin-bottom:8px;"></div>
+          <div class="skeleton" style="height:12px;width:65%;margin-bottom:10px;"></div>
+          <div class="skeleton" style="height:24px;width:40%;border-radius:20px;"></div>
         </div>
       </div>
     </div>
   </div>
 </main>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle" style="max-width:480px;">
+    <div class="modal-header">
+      <h2 class="modal-title" id="detailModalTitle">Booking Detail</h2>
+      <button class="modal-close" id="detailModalClose" aria-label="Close">&times;</button>
+    </div>
+    <div id="detailModalBody" style="display:flex;flex-direction:column;gap:14px;"></div>
+  </div>
+</div>
 
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="editModal">
@@ -121,13 +102,13 @@
       <input type="date" id="editApptDate" class="input" required />
     </div>
     <div class="form-group">
-      <label class="form-label" for="editApptStartSlot">New Start Time (Hourly)</label>
+      <label class="form-label" for="editApptStartSlot">Start Time</label>
       <select id="editApptStartSlot" class="input" required>
         <option value="">Select start time</option>
       </select>
     </div>
     <div class="form-group">
-      <label class="form-label" for="editApptEndSlot">New End Time (Hourly)</label>
+      <label class="form-label" for="editApptEndSlot">End Time</label>
       <select id="editApptEndSlot" class="input" required>
         <option value="">Select end time</option>
       </select>
@@ -137,7 +118,7 @@
 </div>
 
 <script>
-  const API = 'http://localhost:5000/api/v1';
+  const API = '/api/v1';
   const BANGKOK_TIMEZONE = 'Asia/Bangkok';
 
   const api = (path, opts = {}) => fetch(API + path, {
@@ -166,28 +147,22 @@
 
   function parseTimeToMinutes(timeStr) {
     const [hourStr, minuteStr] = String(timeStr || '').split(':');
-    const hour = Number(hourStr);
-    const minute = Number(minuteStr);
+    const hour = Number(hourStr); const minute = Number(minuteStr);
     if (!Number.isInteger(hour) || !Number.isInteger(minute)) return null;
     if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
     return (hour * 60) + minute;
   }
 
   function toHHMM(totalMinutes) {
-    const hour = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
-    const minute = String(totalMinutes % 60).padStart(2, '0');
-    return `${hour}:${minute}`;
+    return `${String(Math.floor(totalMinutes / 60)).padStart(2,'0')}:${String(totalMinutes % 60).padStart(2,'0')}`;
   }
 
   function buildHourlySlots(openTime, closeTime) {
     const openMinutes = parseTimeToMinutes(openTime);
     const closeMinutes = parseTimeToMinutes(closeTime);
     if (openMinutes === null || closeMinutes === null || openMinutes > closeMinutes) return [];
-
-    const firstHour = Math.ceil(openMinutes / 60) * 60;
-    const lastHour = Math.floor(closeMinutes / 60) * 60;
     const slots = [];
-    for (let m = firstHour; m <= lastHour; m += 60) {
+    for (let m = Math.ceil(openMinutes / 60) * 60; m <= Math.floor(closeMinutes / 60) * 60; m += 60) {
       slots.push(toHHMM(m));
     }
     return slots;
@@ -195,81 +170,58 @@
 
   function getBangkokDateParts(date) {
     const parts = new Intl.DateTimeFormat('en-GB', {
-      timeZone: BANGKOK_TIMEZONE,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
+      timeZone: BANGKOK_TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit'
     }).formatToParts(date);
     return {
-      year: Number(parts.find((p) => p.type === 'year')?.value),
-      month: Number(parts.find((p) => p.type === 'month')?.value),
-      day: Number(parts.find((p) => p.type === 'day')?.value)
+      year: Number(parts.find(p => p.type === 'year')?.value),
+      month: Number(parts.find(p => p.type === 'month')?.value),
+      day: Number(parts.find(p => p.type === 'day')?.value)
     };
   }
 
   function getBangkokTimeParts(date) {
     const parts = new Intl.DateTimeFormat('en-GB', {
-      timeZone: BANGKOK_TIMEZONE,
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
+      timeZone: BANGKOK_TIMEZONE, hour: '2-digit', minute: '2-digit', hour12: false
     }).formatToParts(date);
     return {
-      hour: Number(parts.find((p) => p.type === 'hour')?.value),
-      minute: Number(parts.find((p) => p.type === 'minute')?.value)
+      hour: Number(parts.find(p => p.type === 'hour')?.value),
+      minute: Number(parts.find(p => p.type === 'minute')?.value)
     };
   }
 
   function getBangkokTodayDateValue() {
     const { year, month, day } = getBangkokDateParts(new Date());
-    return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return `${String(year).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
   }
 
   function toBangkokDateValue(date) {
     const { year, month, day } = getBangkokDateParts(date);
-    return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return `${String(year).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
   }
 
   function toBangkokTimeValue(date) {
     const { hour, minute } = getBangkokTimeParts(date);
-    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    return `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
   }
 
   function bangkokDateTimeToISO(dateStr, timeStr) {
     const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateStr || ''));
     const timeMatch = /^(\d{2}):(\d{2})$/.exec(String(timeStr || ''));
     if (!dateMatch || !timeMatch) return null;
-
-    const year = Number(dateMatch[1]);
-    const month = Number(dateMatch[2]);
-    const day = Number(dateMatch[3]);
-    const hour = Number(timeMatch[1]);
-    const minute = Number(timeMatch[2]);
-    if (
-      !Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day) ||
-      !Number.isInteger(hour) || !Number.isInteger(minute) ||
-      month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59
-    ) {
-      return null;
-    }
-
+    const year = Number(dateMatch[1]), month = Number(dateMatch[2]), day = Number(dateMatch[3]);
+    const hour = Number(timeMatch[1]), minute = Number(timeMatch[2]);
+    if (month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
     const utcMillis = Date.UTC(year, month - 1, day, hour - 7, minute, 0, 0);
     const iso = new Date(utcMillis).toISOString();
     return Number.isNaN(new Date(iso).getTime()) ? null : iso;
   }
 
-  function setMinDateInput(inputEl) {
-    inputEl.min = getBangkokTodayDateValue();
-  }
-
   function populateEndSlots(endSelectId, allSlots, selectedStart) {
     const endSelect = document.getElementById(endSelectId);
     const startMinutes = parseTimeToMinutes(selectedStart);
-    const endSlots = allSlots.filter((slot) => parseTimeToMinutes(slot) > startMinutes);
-    endSelect.innerHTML = [
-      '<option value="">Select end time</option>',
-      ...endSlots.map((slot) => `<option value="${slot}">${slot}</option>`)
-    ].join('');
+    const endSlots = allSlots.filter(slot => parseTimeToMinutes(slot) > startMinutes);
+    endSelect.innerHTML = ['<option value="">Select end time</option>',
+      ...endSlots.map(slot => `<option value="${slot}">${slot}</option>`)].join('');
     endSelect.disabled = endSlots.length === 0;
     return endSlots;
   }
@@ -277,9 +229,8 @@
   function formatDate(dateStr) {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleString('en-GB', {
-      timeZone: BANGKOK_TIMEZONE,
-      weekday: 'short', year: 'numeric', month: 'short',
-      day: 'numeric', hour: '2-digit', minute: '2-digit'
+      timeZone: BANGKOK_TIMEZONE, weekday: 'short', year: 'numeric',
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
   }
 
@@ -287,22 +238,24 @@
     const startText = formatDate(startDateStr);
     if (!endDateStr) return startText;
     const endText = new Date(endDateStr).toLocaleTimeString('en-GB', {
-      timeZone: BANGKOK_TIMEZONE,
-      hour: '2-digit',
-      minute: '2-digit'
+      timeZone: BANGKOK_TIMEZONE, hour: '2-digit', minute: '2-digit'
     });
-    return `${startText} - ${endText}`;
+    return `${startText} – ${endText}`;
   }
 
-  if (!isLoggedIn()) {
-    window.location.href = 'index.html';
+  // Returns true if now is within 1 hour before apptDate (or past)
+  function isWithinOneHour(apptDate) {
+    const oneHourBefore = new Date(new Date(apptDate).getTime() - 60 * 60 * 1000);
+    return Date.now() >= oneHourBefore.getTime();
   }
+
+  if (!isLoggedIn()) window.location.href = 'index.html';
 
   function renderNav() {
     const navAuth = document.getElementById('navAuth');
     navAuth.innerHTML = `
       <span class="user-greeting">Hi, ${getUserName()}</span>
-      <button class="btn btn-ghost btn-sm" id="logoutBtn">Logout</button>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn">Sign Out</button>
     `;
     document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.removeItem('token');
@@ -310,6 +263,46 @@
     });
   }
   renderNav();
+
+  // Detail modal
+  const detailModal = document.getElementById('detailModal');
+  document.getElementById('detailModalClose').addEventListener('click', () => detailModal.classList.remove('open'));
+  detailModal.addEventListener('click', (e) => { if (e.target === detailModal) detailModal.classList.remove('open'); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') detailModal.classList.remove('open'); });
+
+  function openDetailModal(b) {
+    const space = b.coworkingSpace || {};
+    const spaceName = space.name || b.spaceName || 'Unknown Space';
+    const address = space.address || '';
+    const tel = space.tel || '';
+    const hours = (space.opentime && space.closetime) ? `${space.opentime} – ${space.closetime}` : '';
+    const dateRange = formatRange(b.apptDate, b.apptEnd);
+    const qrCode = b.qrCode || '';
+
+    document.getElementById('detailModalBody').innerHTML = `
+      <div style="background:var(--primary);border-radius:8px;padding:16px 18px;color:#fff;">
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.65);margin-bottom:4px;">Space</div>
+        <div style="font-size:1rem;font-weight:700;">${escHtml(spaceName)}</div>
+        ${address ? `<div style="font-size:0.82rem;color:rgba(255,255,255,0.72);margin-top:2px;">${escHtml(address)}</div>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${tel ? `<div style="display:flex;justify-content:space-between;font-size:0.875rem;"><span style="color:var(--text-muted);font-weight:600;">Tel</span><span>${escHtml(tel)}</span></div>` : ''}
+        ${hours ? `<div style="display:flex;justify-content:space-between;font-size:0.875rem;"><span style="color:var(--text-muted);font-weight:600;">Hours</span><span>${escHtml(hours)}</span></div>` : ''}
+        <div style="display:flex;justify-content:space-between;font-size:0.875rem;"><span style="color:var(--text-muted);font-weight:600;">Date &amp; Time</span><span style="text-align:right;max-width:60%;">${escHtml(dateRange)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:0.875rem;align-items:flex-start;">
+          <span style="color:var(--text-muted);font-weight:600;">Booking ID</span>
+          <span style="font-family:monospace;font-size:0.75rem;color:var(--text-muted);text-align:right;max-width:60%;word-break:break-all;">${escHtml(b._id)}</span>
+        </div>
+      </div>
+      ${qrCode ? `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+          <img src="${escHtml(qrCode)}" alt="Booking QR Code" style="width:160px;height:160px;border-radius:6px;" />
+          <span style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Scan at check-in</span>
+        </div>
+      ` : '<div style="font-size:0.82rem;color:var(--text-muted);text-align:center;">No QR code available for this booking.</div>'}
+    `;
+    detailModal.classList.add('open');
+  }
 
   let editingId = null;
   const editModal = document.getElementById('editModal');
@@ -320,21 +313,16 @@
   function openEditModal(id, startDate, endDate, openTime, closeTime) {
     editingId = id;
     document.getElementById('editAlert').innerHTML = '';
-
     const dateInput = document.getElementById('editApptDate');
     const startSelect = document.getElementById('editApptStartSlot');
     const endSelect = document.getElementById('editApptEndSlot');
-
     const allSlots = buildHourlySlots(openTime, closeTime);
     const startSlots = allSlots.slice(0, Math.max(0, allSlots.length - 1));
-    startSelect.innerHTML = [
-      '<option value="">Select start time</option>',
-      ...startSlots.map((slot) => `<option value="${slot}">${slot}</option>`)
-    ].join('');
+    startSelect.innerHTML = ['<option value="">Select start time</option>',
+      ...startSlots.map(slot => `<option value="${slot}">${slot}</option>`)].join('');
     startSelect.disabled = startSlots.length === 0;
     endSelect.innerHTML = '<option value="">Select end time</option>';
     endSelect.disabled = true;
-
     if (startDate) {
       const start = new Date(startDate);
       const end = endDate ? new Date(endDate) : null;
@@ -351,17 +339,13 @@
       startSelect.value = '';
       endSelect.value = '';
     }
-
-    setMinDateInput(dateInput);
+    dateInput.min = getBangkokTodayDateValue();
     startSelect.onchange = () => populateEndSlots('editApptEndSlot', allSlots, startSelect.value);
     editModal.classList.add('open');
     dateInput.focus();
   }
 
-  function closeEditModal() {
-    editModal.classList.remove('open');
-    editingId = null;
-  }
+  function closeEditModal() { editModal.classList.remove('open'); editingId = null; }
 
   document.getElementById('editSaveBtn').addEventListener('click', async () => {
     const alertEl = document.getElementById('editAlert');
@@ -370,19 +354,16 @@
     const apptStartSlot = document.getElementById('editApptStartSlot').value;
     const apptEndSlot = document.getElementById('editApptEndSlot').value;
     alertEl.innerHTML = '';
-
     if (!apptDate || !apptStartSlot || !apptEndSlot) {
       alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:8px;">Please select date, start time, and end time.</div>';
       return;
     }
-
     const apptStartISO = bangkokDateTimeToISO(apptDate, apptStartSlot);
     const apptEndISO = bangkokDateTimeToISO(apptDate, apptEndSlot);
     if (!apptStartISO || !apptEndISO) {
       alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:8px;">Invalid date/time selection.</div>';
       return;
     }
-
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Saving...';
     try {
@@ -403,7 +384,7 @@
   });
 
   async function deleteBooking(id) {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    if (!confirm('Cancel this booking?')) return;
     try {
       const res = await api(`/reservations/${id}`, { method: 'DELETE' });
       if (!res.ok) {
@@ -421,43 +402,48 @@
     if (bookings.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">&#x1F4C5;</div>
-          <div class="empty-state-text">No bookings yet</div>
-          <a href="index.html" class="btn btn-primary" style="margin-top:16px;">Browse Spaces</a>
+          <div class="empty-state-title">No bookings yet</div>
+          <div class="empty-state-text">Browse available spaces to make your first reservation.</div>
+          <a href="index.html" class="btn btn-primary" style="margin-top:20px;">Browse Spaces</a>
         </div>
       `;
       return;
     }
 
     container.innerHTML = `<div class="booking-list">${
-      bookings.map((b) => {
+      bookings.map(b => {
         const space = b.coworkingSpace || {};
         const spaceName = space.name || b.spaceName || 'Unknown Space';
         const address = space.address || '';
         const qrCode = b.qrCode || '';
+        const locked = isWithinOneHour(b.apptDate);
+
         return `
           <div class="booking-item" id="booking-${escHtml(b._id)}">
             <div class="booking-item-body">
               <div class="booking-item-name">${escHtml(spaceName)}</div>
-              ${address ? `<div class="booking-item-address"><span>&#x1F4CD;</span>${escHtml(address)}</div>` : ''}
-              <div class="booking-item-date">
-                <span>&#x1F4C5;</span>
-                ${escHtml(formatRange(b.apptDate, b.apptEnd))}
-              </div>
+              ${address ? `<div class="booking-item-address">${escHtml(address)}</div>` : ''}
+              <div class="booking-item-date">${escHtml(formatRange(b.apptDate, b.apptEnd))}</div>
               <div class="booking-item-actions">
-                <button class="btn btn-outline btn-sm" onclick="openEditModal('${escHtml(b._id)}', '${escHtml(b.apptDate)}', '${escHtml(b.apptEnd || '')}', '${escHtml(space.opentime || '')}', '${escHtml(space.closetime || '')}')">
-                  &#9998; Edit
+                <button class="btn btn-primary btn-sm" onclick="openDetailModal(bookingsData.find(x=>x._id==='${escHtml(b._id)}'))">
+                  View Detail
                 </button>
-                <button class="btn btn-danger btn-sm" onclick="deleteBooking('${escHtml(b._id)}')">
-                  &#x1F5D1; Cancel
+                <button class="btn btn-outline btn-sm"
+                  ${locked ? 'disabled title="Cannot edit within 1 hour of booking"' : `onclick="openEditModal('${escHtml(b._id)}','${escHtml(b.apptDate)}','${escHtml(b.apptEnd||'')}','${escHtml(space.opentime||'')}','${escHtml(space.closetime||'')}')"`}>
+                  Edit
+                </button>
+                <button class="btn btn-danger btn-sm"
+                  ${locked ? 'disabled title="Cannot cancel within 1 hour of booking"' : `onclick="deleteBooking('${escHtml(b._id)}')"`}>
+                  Cancel
                 </button>
               </div>
+              ${locked ? '<div class="cancel-hint">Modifications locked — within 1 hour of booking time.</div>' : ''}
             </div>
             ${qrCode ? `
               <div class="booking-item-qr">
                 <div class="qr-container">
                   <img src="${escHtml(qrCode)}" alt="QR Code" />
-                  <span class="qr-label">QR Code</span>
+                  <span class="qr-label">Check-in QR</span>
                 </div>
               </div>
             ` : ''}
@@ -467,17 +453,17 @@
     }</div>`;
   }
 
+  let bookingsData = [];
+
   async function loadBookings() {
     try {
       const res = await api('/reservations');
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to load bookings');
-      const bookings = Array.isArray(data) ? data : (data.data || []);
-      renderBookings(bookings);
+      bookingsData = Array.isArray(data) ? data : (data.data || []);
+      renderBookings(bookingsData);
     } catch (err) {
-      document.getElementById('bookingsList').innerHTML = `
-        <div class="alert alert-error">${err.message}</div>
-      `;
+      document.getElementById('bookingsList').innerHTML = `<div class="alert alert-error">${err.message}</div>`;
     }
   }
 
