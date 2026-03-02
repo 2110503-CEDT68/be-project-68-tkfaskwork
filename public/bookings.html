@@ -460,7 +460,8 @@
       const res = await api('/reservations');
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to load bookings');
-      bookingsData = Array.isArray(data) ? data : (data.data || []);
+      const all = Array.isArray(data) ? data : (data.data || []);
+      bookingsData = all.filter(b => b.qrCode);
       renderBookings(bookingsData);
     } catch (err) {
       document.getElementById('bookingsList').innerHTML = `<div class="alert alert-error">${err.message}</div>`;
