@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({ to, subject, html, attachments = [] }) => {
     try {
         const transporter = nodemailer.createTransport({
             host: process.env.EMAIL_HOST,
@@ -14,7 +14,8 @@ const sendEmail = async ({ to, subject, html }) => {
             from: process.env.EMAIL_FROM || 'noreply@coworkspace.com',
             to,
             subject,
-            html
+            html,
+            attachments
         });
     } catch (err) {
         console.log('Email send failed (non-fatal):', err.message);

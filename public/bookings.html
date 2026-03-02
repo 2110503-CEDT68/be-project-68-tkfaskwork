@@ -117,8 +117,20 @@
     </div>
     <div id="editAlert"></div>
     <div class="form-group">
-      <label class="form-label" for="editApptDate">New Date &amp; Time</label>
-      <input type="datetime-local" id="editApptDate" class="input" required />
+      <label class="form-label" for="editApptDate">New Date</label>
+      <input type="date" id="editApptDate" class="input" required />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="editApptStartSlot">New Start Time (Hourly)</label>
+      <select id="editApptStartSlot" class="input" required>
+        <option value="">Select start time</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="editApptEndSlot">New End Time (Hourly)</label>
+      <select id="editApptEndSlot" class="input" required>
+        <option value="">Select end time</option>
+      </select>
     </div>
     <button class="btn btn-primary btn-block" id="editSaveBtn">Save Changes</button>
   </div>
@@ -126,6 +138,7 @@
 
 <script>
   const API = 'http://localhost:5000/api/v1';
+  const BANGKOK_TIMEZONE = 'Asia/Bangkok';
 
   const api = (path, opts = {}) => fetch(API + path, {
     headers: {
@@ -151,20 +164,140 @@
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  function parseTimeToMinutes(timeStr) {
+    const [hourStr, minuteStr] = String(timeStr || '').split(':');
+    const hour = Number(hourStr);
+    const minute = Number(minuteStr);
+    if (!Number.isInteger(hour) || !Number.isInteger(minute)) return null;
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+    return (hour * 60) + minute;
+  }
+
+  function toHHMM(totalMinutes) {
+    const hour = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+    const minute = String(totalMinutes % 60).padStart(2, '0');
+    return `${hour}:${minute}`;
+  }
+
+  function buildHourlySlots(openTime, closeTime) {
+    const openMinutes = parseTimeToMinutes(openTime);
+    const closeMinutes = parseTimeToMinutes(closeTime);
+    if (openMinutes === null || closeMinutes === null || openMinutes > closeMinutes) return [];
+
+    const firstHour = Math.ceil(openMinutes / 60) * 60;
+    const lastHour = Math.floor(closeMinutes / 60) * 60;
+    const slots = [];
+    for (let m = firstHour; m <= lastHour; m += 60) {
+      slots.push(toHHMM(m));
+    }
+    return slots;
+  }
+
+  function getBangkokDateParts(date) {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: BANGKOK_TIMEZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(date);
+    return {
+      year: Number(parts.find((p) => p.type === 'year')?.value),
+      month: Number(parts.find((p) => p.type === 'month')?.value),
+      day: Number(parts.find((p) => p.type === 'day')?.value)
+    };
+  }
+
+  function getBangkokTimeParts(date) {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: BANGKOK_TIMEZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).formatToParts(date);
+    return {
+      hour: Number(parts.find((p) => p.type === 'hour')?.value),
+      minute: Number(parts.find((p) => p.type === 'minute')?.value)
+    };
+  }
+
+  function getBangkokTodayDateValue() {
+    const { year, month, day } = getBangkokDateParts(new Date());
+    return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  function toBangkokDateValue(date) {
+    const { year, month, day } = getBangkokDateParts(date);
+    return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  function toBangkokTimeValue(date) {
+    const { hour, minute } = getBangkokTimeParts(date);
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  }
+
+  function bangkokDateTimeToISO(dateStr, timeStr) {
+    const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateStr || ''));
+    const timeMatch = /^(\d{2}):(\d{2})$/.exec(String(timeStr || ''));
+    if (!dateMatch || !timeMatch) return null;
+
+    const year = Number(dateMatch[1]);
+    const month = Number(dateMatch[2]);
+    const day = Number(dateMatch[3]);
+    const hour = Number(timeMatch[1]);
+    const minute = Number(timeMatch[2]);
+    if (
+      !Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day) ||
+      !Number.isInteger(hour) || !Number.isInteger(minute) ||
+      month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59
+    ) {
+      return null;
+    }
+
+    const utcMillis = Date.UTC(year, month - 1, day, hour - 7, minute, 0, 0);
+    const iso = new Date(utcMillis).toISOString();
+    return Number.isNaN(new Date(iso).getTime()) ? null : iso;
+  }
+
+  function setMinDateInput(inputEl) {
+    inputEl.min = getBangkokTodayDateValue();
+  }
+
+  function populateEndSlots(endSelectId, allSlots, selectedStart) {
+    const endSelect = document.getElementById(endSelectId);
+    const startMinutes = parseTimeToMinutes(selectedStart);
+    const endSlots = allSlots.filter((slot) => parseTimeToMinutes(slot) > startMinutes);
+    endSelect.innerHTML = [
+      '<option value="">Select end time</option>',
+      ...endSlots.map((slot) => `<option value="${slot}">${slot}</option>`)
+    ].join('');
+    endSelect.disabled = endSlots.length === 0;
+    return endSlots;
+  }
+
   function formatDate(dateStr) {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleString('en-GB', {
+      timeZone: BANGKOK_TIMEZONE,
       weekday: 'short', year: 'numeric', month: 'short',
       day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
   }
 
-  // Auth guard
+  function formatRange(startDateStr, endDateStr) {
+    const startText = formatDate(startDateStr);
+    if (!endDateStr) return startText;
+    const endText = new Date(endDateStr).toLocaleTimeString('en-GB', {
+      timeZone: BANGKOK_TIMEZONE,
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    return `${startText} - ${endText}`;
+  }
+
   if (!isLoggedIn()) {
     window.location.href = 'index.html';
   }
 
-  // Render nav
   function renderNav() {
     const navAuth = document.getElementById('navAuth');
     navAuth.innerHTML = `
@@ -176,38 +309,53 @@
       window.location.href = 'index.html';
     });
   }
-
   renderNav();
 
-  // Edit modal state
   let editingId = null;
   const editModal = document.getElementById('editModal');
-
   document.getElementById('editModalClose').addEventListener('click', closeEditModal);
   editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeEditModal(); });
 
-  function openEditModal(id, currentDate) {
+  function openEditModal(id, startDate, endDate, openTime, closeTime) {
     editingId = id;
     document.getElementById('editAlert').innerHTML = '';
-    const input = document.getElementById('editApptDate');
 
-    // Pre-fill with current date
-    if (currentDate) {
-      const d = new Date(currentDate);
-      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-      input.value = d.toISOString().slice(0, 16);
+    const dateInput = document.getElementById('editApptDate');
+    const startSelect = document.getElementById('editApptStartSlot');
+    const endSelect = document.getElementById('editApptEndSlot');
+
+    const allSlots = buildHourlySlots(openTime, closeTime);
+    const startSlots = allSlots.slice(0, Math.max(0, allSlots.length - 1));
+    startSelect.innerHTML = [
+      '<option value="">Select start time</option>',
+      ...startSlots.map((slot) => `<option value="${slot}">${slot}</option>`)
+    ].join('');
+    startSelect.disabled = startSlots.length === 0;
+    endSelect.innerHTML = '<option value="">Select end time</option>';
+    endSelect.disabled = true;
+
+    if (startDate) {
+      const start = new Date(startDate);
+      const end = endDate ? new Date(endDate) : null;
+      dateInput.value = toBangkokDateValue(start);
+      const currentStartSlot = toBangkokTimeValue(start);
+      startSelect.value = startSlots.includes(currentStartSlot) ? currentStartSlot : '';
+      if (startSelect.value) {
+        const endSlots = populateEndSlots('editApptEndSlot', allSlots, startSelect.value);
+        const currentEndSlot = end ? toBangkokTimeValue(end) : '';
+        endSelect.value = endSlots.includes(currentEndSlot) ? currentEndSlot : '';
+      }
     } else {
-      input.value = '';
+      dateInput.value = '';
+      startSelect.value = '';
+      endSelect.value = '';
     }
 
-    // Set min
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    input.min = now.toISOString().slice(0, 16);
-
+    setMinDateInput(dateInput);
+    startSelect.onchange = () => populateEndSlots('editApptEndSlot', allSlots, startSelect.value);
     editModal.classList.add('open');
-    input.focus();
+    dateInput.focus();
   }
 
   function closeEditModal() {
@@ -219,20 +367,28 @@
     const alertEl = document.getElementById('editAlert');
     const btn = document.getElementById('editSaveBtn');
     const apptDate = document.getElementById('editApptDate').value;
+    const apptStartSlot = document.getElementById('editApptStartSlot').value;
+    const apptEndSlot = document.getElementById('editApptEndSlot').value;
     alertEl.innerHTML = '';
 
-    if (!apptDate) {
-      alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:8px;">Please select a date and time.</div>';
+    if (!apptDate || !apptStartSlot || !apptEndSlot) {
+      alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:8px;">Please select date, start time, and end time.</div>';
+      return;
+    }
+
+    const apptStartISO = bangkokDateTimeToISO(apptDate, apptStartSlot);
+    const apptEndISO = bangkokDateTimeToISO(apptDate, apptEndSlot);
+    if (!apptStartISO || !apptEndISO) {
+      alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:8px;">Invalid date/time selection.</div>';
       return;
     }
 
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Saving...';
-
     try {
       const res = await api(`/reservations/${editingId}`, {
         method: 'PUT',
-        body: JSON.stringify({ apptDate: new Date(apptDate).toISOString() })
+        body: JSON.stringify({ apptDate: apptStartISO, apptEnd: apptEndISO })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Update failed');
@@ -248,7 +404,6 @@
 
   async function deleteBooking(id) {
     if (!confirm('Are you sure you want to cancel this booking?')) return;
-
     try {
       const res = await api(`/reservations/${id}`, { method: 'DELETE' });
       if (!res.ok) {
@@ -263,7 +418,6 @@
 
   function renderBookings(bookings) {
     const container = document.getElementById('bookingsList');
-
     if (bookings.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
@@ -276,12 +430,11 @@
     }
 
     container.innerHTML = `<div class="booking-list">${
-      bookings.map(b => {
+      bookings.map((b) => {
         const space = b.coworkingSpace || {};
         const spaceName = space.name || b.spaceName || 'Unknown Space';
         const address = space.address || '';
         const qrCode = b.qrCode || '';
-
         return `
           <div class="booking-item" id="booking-${escHtml(b._id)}">
             <div class="booking-item-body">
@@ -289,10 +442,10 @@
               ${address ? `<div class="booking-item-address"><span>&#x1F4CD;</span>${escHtml(address)}</div>` : ''}
               <div class="booking-item-date">
                 <span>&#x1F4C5;</span>
-                ${escHtml(formatDate(b.apptDate))}
+                ${escHtml(formatRange(b.apptDate, b.apptEnd))}
               </div>
               <div class="booking-item-actions">
-                <button class="btn btn-outline btn-sm" onclick="openEditModal('${escHtml(b._id)}', '${escHtml(b.apptDate)}')">
+                <button class="btn btn-outline btn-sm" onclick="openEditModal('${escHtml(b._id)}', '${escHtml(b.apptDate)}', '${escHtml(b.apptEnd || '')}', '${escHtml(space.opentime || '')}', '${escHtml(space.closetime || '')}')">
                   &#9998; Edit
                 </button>
                 <button class="btn btn-danger btn-sm" onclick="deleteBooking('${escHtml(b._id)}')">

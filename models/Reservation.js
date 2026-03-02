@@ -5,6 +5,10 @@ const ReservationSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
+    apptEnd: {
+        type: Date,
+        required: true
+    },
     user: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
