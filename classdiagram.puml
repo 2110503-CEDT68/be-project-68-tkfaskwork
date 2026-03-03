@@ -1,0 +1,124 @@
+@startuml
+hide circle
+skinparam classAttributeIconSize 0
+left to right direction
+
+package "Models" {
+  class User {
+    +name: String
+    +tel: String
+    +email: String
+    +role: String
+    +password: String
+    +resetPasswordToken: String
+    +resetPasswordExpire: Date
+    +createdAt: Date
+    +getSignedJwtToken()
+    +matchPassword(enteredPassword)
+  }
+
+  class CoworkingSpace {
+    +name: String
+    +address: String
+    +tel: String
+    +opentime: String
+    +closetime: String
+    +reservations: List<Reservation>
+  }
+
+  class Reservation {
+    +apptDate: Date
+    +apptEnd: Date
+    +qrCode: String
+    +createdAt: Date
+    +user: ObjectId
+    +coworkingSpace: ObjectId
+  }
+}
+
+package "Controllers" {
+  class AuthController {
+    +register()
+    +login()
+    +getMe()
+    +logout()
+  }
+
+  class CoworkingSpacesController {
+    +getCoworkingSpaces()
+    +getCoworkingSpace()
+    +createCoworkingSpace()
+    +updateCoworkingSpace()
+    +deleteCoworkingSpace()
+  }
+
+  class ReservationsController {
+    +getReservationPublic()
+    +getReservations()
+    +getReservation()
+    +addReservation()
+    +updateReservation()
+    +deleteReservation()
+  }
+
+  class RecommendController {
+    +getRecommendation()
+  }
+}
+
+package "Routes" {
+  class AuthRoute
+  class CoworkingSpacesRoute
+  class ReservationsRoute
+  class RecommendRoute
+}
+
+package "Middleware" {
+  class AuthMiddleware {
+    +protect()
+    +authorize(roles)
+  }
+}
+
+package "Utils" {
+  class QRCodeUtil {
+    +generateQR(data)
+  }
+
+  class EmailUtil {
+    +sendEmail(to, subject, html, attachments)
+  }
+}
+
+' Domain relationships
+User "1" <-- "0..*" Reservation : user
+CoworkingSpace "1" <-- "0..*" Reservation : coworkingSpace
+CoworkingSpace "1" o-- "0..*" Reservation : virtual reservations
+
+' Controller to model dependencies
+AuthController ..> User
+CoworkingSpacesController ..> CoworkingSpace
+CoworkingSpacesController ..> Reservation
+ReservationsController ..> Reservation
+ReservationsController ..> CoworkingSpace
+ReservationsController ..> User
+RecommendController ..> Reservation
+RecommendController ..> CoworkingSpace
+
+' Controller to utility dependencies
+ReservationsController ..> QRCodeUtil
+ReservationsController ..> EmailUtil
+
+' Route to controller dependencies
+AuthRoute ..> AuthController
+CoworkingSpacesRoute ..> CoworkingSpacesController
+ReservationsRoute ..> ReservationsController
+RecommendRoute ..> RecommendController
+
+' Route to middleware dependencies
+AuthRoute ..> AuthMiddleware
+CoworkingSpacesRoute ..> AuthMiddleware
+ReservationsRoute ..> AuthMiddleware
+RecommendRoute ..> AuthMiddleware
+
+@enduml

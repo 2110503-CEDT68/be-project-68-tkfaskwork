@@ -1,0 +1,70 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Guest
+actor User
+actor Admin
+actor "AI Service" as AI
+actor "Email Service" as Email
+actor "QR Generator" as QR
+
+rectangle "Coworking Space Booking System" {
+  usecase "Register" as UC_Register
+  usecase "Login" as UC_Login
+  usecase "View My Profile" as UC_Profile
+
+  usecase "View Coworking Spaces" as UC_ViewSpaces
+  usecase "View Space Detail" as UC_ViewSpaceDetail
+
+  usecase "Create Reservation" as UC_CreateReservation
+  usecase "View My Reservations" as UC_ViewMyReservations
+  usecase "View Reservation Detail" as UC_ViewReservation
+  usecase "Update Reservation" as UC_UpdateReservation
+  usecase "Delete Reservation" as UC_DeleteReservation
+  usecase "View Reservation (Public QR)" as UC_ViewReservationPublic
+
+  usecase "Get Space Recommendation" as UC_Recommend
+
+  usecase "Manage Coworking Spaces" as UC_ManageSpaces
+  usecase "View All Reservations" as UC_ViewAllReservations
+
+  usecase "Generate QR Code" as UC_GenerateQR
+  usecase "Send Booking Confirmation Email" as UC_SendEmail
+}
+
+Guest --> UC_Register
+Guest --> UC_Login
+Guest --> UC_ViewSpaces
+Guest --> UC_ViewSpaceDetail
+Guest --> UC_ViewReservationPublic
+
+User --> UC_Profile
+User --> UC_ViewSpaces
+User --> UC_ViewSpaceDetail
+User --> UC_CreateReservation
+User --> UC_ViewMyReservations
+User --> UC_ViewReservation
+User --> UC_UpdateReservation
+User --> UC_DeleteReservation
+User --> UC_Recommend
+
+Admin --> UC_Profile
+Admin --> UC_ViewSpaces
+Admin --> UC_ViewSpaceDetail
+Admin --> UC_ManageSpaces
+Admin --> UC_ViewAllReservations
+Admin --> UC_CreateReservation
+Admin --> UC_ViewReservation
+Admin --> UC_UpdateReservation
+Admin --> UC_DeleteReservation
+Admin --> UC_Recommend
+
+UC_CreateReservation .> UC_GenerateQR : <<include>>
+UC_CreateReservation .> UC_SendEmail : <<include>>
+
+AI --> UC_Recommend
+Email --> UC_SendEmail
+QR --> UC_GenerateQR
+
+@enduml
